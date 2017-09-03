@@ -3,6 +3,10 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NppPIALexer2", "NppPIALexer2.csproj", "{D0FB323E-FC77-4A83-832D-38B3FB88DAC4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ParserTest", "ParserTest\ParserTest.csproj", "{C418CB1A-80AC-4AA8-9E51-8561F608095C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ParserTest2", "ParserTest2\ParserTest2.csproj", "{538D7719-EDFD-4D38-9AEA-99A102278362}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -23,6 +27,26 @@ Global
 		{D0FB323E-FC77-4A83-832D-38B3FB88DAC4}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{D0FB323E-FC77-4A83-832D-38B3FB88DAC4}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{D0FB323E-FC77-4A83-832D-38B3FB88DAC4}.Release|x86.ActiveCfg = Release|Any CPU
+		{C418CB1A-80AC-4AA8-9E51-8561F608095C}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{C418CB1A-80AC-4AA8-9E51-8561F608095C}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
+		{C418CB1A-80AC-4AA8-9E51-8561F608095C}.Debug|Mixed Platforms.Build.0 = Debug|x86
+		{C418CB1A-80AC-4AA8-9E51-8561F608095C}.Debug|x86.ActiveCfg = Debug|x86
+		{C418CB1A-80AC-4AA8-9E51-8561F608095C}.Debug|x86.Build.0 = Debug|x86
+		{C418CB1A-80AC-4AA8-9E51-8561F608095C}.Release|Any CPU.ActiveCfg = Release|x86
+		{C418CB1A-80AC-4AA8-9E51-8561F608095C}.Release|Mixed Platforms.ActiveCfg = Release|x86
+		{C418CB1A-80AC-4AA8-9E51-8561F608095C}.Release|Mixed Platforms.Build.0 = Release|x86
+		{C418CB1A-80AC-4AA8-9E51-8561F608095C}.Release|x86.ActiveCfg = Release|x86
+		{C418CB1A-80AC-4AA8-9E51-8561F608095C}.Release|x86.Build.0 = Release|x86
+		{538D7719-EDFD-4D38-9AEA-99A102278362}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{538D7719-EDFD-4D38-9AEA-99A102278362}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
+		{538D7719-EDFD-4D38-9AEA-99A102278362}.Debug|Mixed Platforms.Build.0 = Debug|x86
+		{538D7719-EDFD-4D38-9AEA-99A102278362}.Debug|x86.ActiveCfg = Debug|x86
+		{538D7719-EDFD-4D38-9AEA-99A102278362}.Debug|x86.Build.0 = Debug|x86
+		{538D7719-EDFD-4D38-9AEA-99A102278362}.Release|Any CPU.ActiveCfg = Release|x86
+		{538D7719-EDFD-4D38-9AEA-99A102278362}.Release|Mixed Platforms.ActiveCfg = Release|x86
+		{538D7719-EDFD-4D38-9AEA-99A102278362}.Release|Mixed Platforms.Build.0 = Release|x86
+		{538D7719-EDFD-4D38-9AEA-99A102278362}.Release|x86.ActiveCfg = Release|x86
+		{538D7719-EDFD-4D38-9AEA-99A102278362}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

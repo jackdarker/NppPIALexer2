@@ -8,9 +8,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("NppPIALexer2")]
 [assembly: AssemblyDescription("Notepad++ Project Plugin")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("darkbull")]
+[assembly: AssemblyCompany("company X")]
 [assembly: AssemblyProduct("NppPIALexer2")]
-[assembly: AssemblyCopyright("Copyright © darkbull 2011")]
+[assembly: AssemblyCopyright("Copyright © ?? 2017")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

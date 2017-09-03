@@ -109,6 +109,55 @@ namespace NppPIALexer2 {
 		return _out;
 	}
 
+    private static Char[] s_SingleSeparators = {' ','(',')','-','>','<','+','\\','/',',',';','.','!','=','?',':','*','%','&','|'};
+    private static Char[] s_DualSeparators = { '-', '>', '<', '/', '!', '=', '&', '|' };    //  -> // >= <= == != && ||
+    private void parseLine(String Line, int LineNo, IParserNode Tree) {
+        IParserNode LineNode = null;
+        int offset=0;
+        int previous=0;
+        string found;
+        int foundSingle=0;
+        int foundDual=0;
+        bool stop=false;
+        bool next = false;
+        List<String> Stack = new List<string>();
+        Line = NormalizeWhitespace(Line);
+        while (!stop) {
+            next = false;
+            foundDual = Line.IndexOfAny(s_DualSeparators, offset);
+            foundSingle = Line.IndexOfAny(s_SingleSeparators, offset);
+
+            if (foundDual >= 0 && foundDual <= foundSingle) {
+                next = true;
+                found = Line.Substring(foundDual, 2);
+                if (found == "->") { // after function parameter list   
+                } else if (found == "//") { // line comment  
+                } else { // its a single
+                    next = false;
+                }
+            }
+            if (foundSingle >= 0 && !next) {
+                next = true;
+                found = Line.Substring(foundSingle, 1);
+                if (found == " ") {
+
+                } else { // its a single
+                    next = false;
+                }
+            }
+  
+            if(!next) {
+                stop = true;
+            }
+        }
+    }
+    private void parseStack(List<String> Stack, bool EOL) {
+        int max = Stack.Count;
+        String word0;
+        if (max >= 1 && EOL) {
+            word0 = Stack[0];
+        }
+    }
         /*assumption:
 	 * - pro Zeile nur ein Kommando
 	 * - Kommando nicht über mehrere Zeilen verteilt

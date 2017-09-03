@@ -1,0 +1,37 @@
+﻿https://www.codeproject.com/Articles/10421/Crafting-an-interpreter-Part-Parse-Trees-and-Syn
+https://www.codeproject.com/Articles/10115/Crafting-an-interpreter-Part-Parsing-and-Grammar
+
+
+Grammar of PIA:
+
+S=([\s\t]+)			#one or more whitespace
+NAME=[a-zA-Z_]+[a-zA-Z0-9_]*	#variable or functionname
+FLOAT=[0-9]+'.'[0-9]
+INT=[0-9]+
+DECL=BASETYPE S NAME 
+DECLASSIGN= DECL (S ASSIGN)? EOL
+BASETYPE= ('int' | 'double')
+
+EOL= (';')? S* '\r\n'
+COMMENT='//' COMMENTTEXT EOL	#Single Line Comment
+MLCOMMENT='/*' COMMENTTEXT (EOL COMMENTTEXT?)* '*/'
+COMMENTTEXT=[a-zA-Z0-9]		#Comment Text
+
+FUNCTION='function' S NAME '(' DECL* ')' S* FUNCRET? S* '{' (COMMENT | EOL) FUNCBODY '}' EOL?  
+FUNCRET='->' S* DECL (S* ',' S* DECL)* 
+FUNCBODY= (DECLASSIGN | COMMENT | MLCOMMENT | CODE | EOL)*
+
+CODE= (WHILE | FOR | SWITCH | EXPRESSION | CODE)
+WHILE='while' S* '(' EXPRESSION ')' S* '{' (COMMENT | EOL) FUNCBODY '}' EOL?
+
+EXPRESSION = (NAME)
+RSideOfRule=    Alternative (S* '/' S* Alternative)* S* ';'
+Alternative=    Term (S Term)* ;
+Term=        ('&&' | '!' | '||')? S* Factor S* ( '*' / '+' / '?')?  
+Factor=        (Nonterminal / NAME / '(' S* RSideOfRule S* ')' )
+Nonterminal =
+
+INCLUDE='#include' S PATH NAME EOL
+USING='using' S PATH EOL
+
+SEQ= (DECLASSIGN | FUNCTION | USING | INCLUDE | COMMENT | MLCOMMENT | EOL)*

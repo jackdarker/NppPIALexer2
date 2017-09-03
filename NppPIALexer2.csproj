@@ -7,8 +7,8 @@
     <ProjectGuid>{D0FB323E-FC77-4A83-832D-38B3FB88DAC4}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>PIALexer2</RootNamespace>
-    <AssemblyName>PIALexer2</AssemblyName>
+    <RootNamespace>NppPIALexer2</RootNamespace>
+    <AssemblyName>NppPIALexer2</AssemblyName>
     <OutputPath>bin\Debug\</OutputPath>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileUpgradeFlags>
@@ -38,7 +38,7 @@
     <DebugType>full</DebugType>
     <ErrorReport>prompt</ErrorReport>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug</OutputPath>
+    <OutputPath>bin\Debug\</OutputPath>
     <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
@@ -119,6 +119,7 @@
     <Compile Include="Src\ModelDocument.cs" />
     <Compile Include="Src\NPP.cs" />
     <Compile Include="Src\Parser.cs" />
+    <Compile Include="Src\ParserNode.cs" />
     <Compile Include="Src\Project.cs" />
     <Compile Include="Src\Resource.cs" />
     <Compile Include="Src\Tag\Language\Asm.cs" />
@@ -136,6 +137,7 @@
     <Compile Include="Src\Tag\TagCache.cs" />
     <Compile Include="Src\Tag\TagUpdater.cs" />
     <Compile Include="Src\TaskList.cs" />
+    <Compile Include="Src\Tokenizer.cs" />
     <Compile Include="Src\Utility.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
@@ -215,6 +217,7 @@
     <Content Include="Images\OpenProj.png" />
     <Content Include="Images\Prev.png" />
     <Content Include="Images\Proj.png" />
+    <Content Include="TextFile1.txt" />
     <None Include="Readme.md" />
     <None Include="Images\Refresh.png" />
     <None Include="Images\Setting.png" />

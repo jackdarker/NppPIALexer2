@@ -15,12 +15,31 @@ Installation
 ________________________________________________________________________________________________________________
 ) NppNppPIALexer2.dll nach .../Npp/plugins kopieren
 
+) SQLite.Interop.dll,System.Data.SQLite.dll, System.Data.SQLite.dll.config nach ../Npp kopieren
+
 ) unter Plugins->NppPIALexer2 aktivieren
 
 ) in ProjektView neues Projekt anlegen (innerhalb PIASmart-Projektverzeichnis)
 
 ) Rebuild zum erzeugen der Intelisense drücken
 
+________________________________________________________________________________________________________________
+Parser
+
+            //  //xyz
+            //  /* xyz */
+            //  /*  xyz
+            //  xyz */
+            //  int i
+            //  int i=0
+            //  i=X
+            //  using "xyz" as asd
+            //  #include "xyz"
+            //  function xyz()
+            //  function xyz(bool bOK)
+            //  function xyz(bool bOK) -> int asd
+            //  { or }
+            //  while (bOK || int>0)
 ________________________________________________________________________________________________________________
 Erzeugen der Intelisense
 ________________________________________________________________________________________________________________
