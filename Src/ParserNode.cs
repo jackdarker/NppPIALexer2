@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 
 namespace NppPIALexer2 {
-    interface IParserNode {
+    public interface IParserNode {
         bool HasChildNode();
         bool HasParent();
         IParserNode GetParent();
@@ -23,52 +23,52 @@ namespace NppPIALexer2 {
         public ParserNode(IParserNode Parent) {
             m_Parent = Parent;
         }
-        public bool IParserNode.HasParent() {
+        bool IParserNode.HasParent() {
             return m_Parent != null;
         }
-        public bool IParserNode.HasChildNode() {
+        bool IParserNode.HasChildNode() {
             return m_Childs.Count != 0;
         }
-        public IParserNode IParserNode.GetParent() {
+        IParserNode IParserNode.GetParent() {
             return m_Parent;
         }
-        public void IParserNode.AppendChildNode(IParserNode Child) {
+        void IParserNode.AppendChildNode(IParserNode Child) {
             if (Child == null) return;
             m_Childs.AddLast(Child);
         }
-        public String IParserNode.GetName() {
+        String IParserNode.GetName() {
             return this.ToString();
         }
-        public String IParserNode.GetFullString() {
+        String IParserNode.GetFullString() {
             return this.ToString();
         }
     }
 
-    public class VariableNode : ParserNode {
+    public class VariableNode : ParserNode, IParserNode {
         private String m_Name;
         private String m_Type;
-        public VariableNode(IParserNode Parent, String Name, String Type):base(Parent) {
+        VariableNode(IParserNode Parent, String Name, String Type):base(Parent) {
             m_Name = Name;
             m_Type = Type;
         }
-        public String IParserNode.GetName() {
+        String IParserNode.GetName() {
             return m_Name;
         }
-        public String IParserNode.GetFullString() {
+        String IParserNode.GetFullString() {
             return m_Type + " " + m_Name;
         }
     }
-    public class FunctionNode : ParserNode {
+    public class FunctionNode : ParserNode, IParserNode {
         private String m_Name;
 
-        public FunctionNode(IParserNode Parent, String Name)
+        FunctionNode(IParserNode Parent, String Name)
             : base(Parent) {
             m_Name = Name;
         }
-        public String IParserNode.GetName() {
+        String IParserNode.GetName() {
             return m_Name;
         }
-        public String IParserNode.GetFullString() {
+        String IParserNode.GetFullString() {
             return m_Name;
         }
     }

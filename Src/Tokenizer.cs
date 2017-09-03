@@ -19,6 +19,16 @@ namespace NppPIALexer2 {
                 return Pos;
             }
         }
+        public class NodeBuilder {
+            public NodeBuilder() {
+            }
+            virtual public void Visit(Token token) {
+                LinkedList<Token>.Enumerator x = token.GetEnumerator();
+                while (x.MoveNext()) {
+                    x.Current.InspectNodes(this);
+                }
+            }
+        }
         public class Token : LinkedList<Token> {
             public Token() {
                 m_Status = -2;
@@ -48,13 +58,18 @@ namespace NppPIALexer2 {
                 m_Type = Type;
                 m_Status = 0;
             }
-            public String GetValue() {
-                LinkedList<Token>.Enumerator x = this.GetEnumerator();
+            public String GetValue(Boolean FullPath) {      
                 string Out = m_Value;//+"(" + m_Type.ToString() + ")";
-                while (x.MoveNext()) {
-                        Out = Out +" " + x.Current.GetValue();
+                if (FullPath) {
+                    LinkedList<Token>.Enumerator x = this.GetEnumerator();
+                    while (x.MoveNext()) {
+                        Out = Out + " " + x.Current.GetValue(FullPath);
+                    }
                 }
                 return Out;
+            }
+            public void InspectNodes(NodeBuilder Visitor) {
+                Visitor.Visit(this);
             }
             int m_PosStart;
             int m_PosEnd;
@@ -441,8 +456,7 @@ namespace NppPIALexer2 {
                 } else {
                     break;
                 }
-            }
-            
+            }          
             return Tree;
         }
     };
