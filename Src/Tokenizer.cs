@@ -68,6 +68,12 @@ namespace NppPIALexer2 {
                 }
                 return Out;
             }
+            public String GetNodeType() {
+                if (m_Type == null)
+                    return "";
+                return m_Type.ToString();
+
+            }
             public void InspectNodes(NodeBuilder Visitor) {
                 Visitor.Visit(this);
             }
@@ -93,15 +99,15 @@ namespace NppPIALexer2 {
         abstract public class Rule {
             abstract public Token Evaluate(String stream, ref int pos);
         }
+        static string s_ManyWhitespace = "[\\s\\t]*";
         #region BaseRules
-        //match all
+        /// <summary>
+        /// match all
+        /// </summary>
         public class RuleSequence : Rule {
             protected LinkedList<Rule> m_Nodes = new LinkedList<Rule>();
             public RuleSequence()
                 : base() {
-            }
-            public void SetNodes(LinkedList<Rule> Nodes) {
-                m_Nodes = Nodes;
             }
             public void AddNode(Rule Node) {
                 m_Nodes.AddLast(Node);
@@ -129,10 +135,12 @@ namespace NppPIALexer2 {
                         
                     }
                 }
-                return ResultA;
+                return ResultA;     //return empty Token if no match
             }
         }
-        //match exactly one 
+        /// <summary>
+        /// match exactly one
+        /// </summary>
         public class RuleAlternative : RuleSequence {
             public RuleAlternative(): base() {
             }
@@ -149,7 +157,9 @@ namespace NppPIALexer2 {
                 return Result;
             }
         }
-        //match One,Multiple or None
+        /// <summary>
+        /// match One,Multiple or None
+        /// </summary>
         public class RuleMultiple : RuleSequence {
             int m_MinMatches=0;
             public RuleMultiple(int MinMatches)
@@ -185,7 +195,9 @@ namespace NppPIALexer2 {
                 return ResultA;
             }
         }
-        //match one or none of the options
+        /// <summary>
+        /// match one or none of the options
+        /// </summary>
         public class RuleOption : RuleSequence {
             public RuleOption()
                 : base() {
@@ -212,14 +224,21 @@ namespace NppPIALexer2 {
             public RuleRegex(String regex) : base() {
                     m_Regex = new Regex(regex, RegexOptions.Singleline);
             }
+            protected Rule m_NodeReplacement;
+            public RuleRegex(String regex, Rule NodeReplace)  : base() {
+                m_Regex = new Regex(regex, RegexOptions.Singleline);
+                m_NodeReplacement = NodeReplace;
+            }
             public override Token Evaluate(String stream, ref int pos) {
                 int PosSave = pos;
                 Token Result=null ;
                 // Match the regular expression pattern against a text string.
+                // https://msdn.microsoft.com/de-de/library/az24scfc(v=vs.100).aspx
                 Match m = m_Regex.Match(stream, pos);
                 if (m.Success && m.Index==pos) {
                     Result = new Token();
-                    Result.SetValue(m.Value, m.Index, this.GetType());//m.Groups[0].Value);
+                    Result.SetValue(m.Value, m.Index,
+                        (this.m_NodeReplacement == null) ? this.GetType() : this.m_NodeReplacement.GetType());//m.Groups[0].Value);
                     pos = Result.GetPosEnd();
                 } else {
                     pos = PosSave;
@@ -240,7 +259,7 @@ namespace NppPIALexer2 {
                 }
             }
             private RuleComment()   : base() {
-                this.AddNode(new RuleRegex("//[^\\r\\n]*"));
+                this.AddNode(new RuleRegex("//[^\\r\\n]*", this));
                 this.AddNode(RuleEOL.Instance);
             }
         }
@@ -258,6 +277,43 @@ namespace NppPIALexer2 {
                 : base("[A-Za-z_][A-Za-z0-9_]*") {
             }
         }
+        /// <summary>
+        /// like "asd43214fdg"
+        /// </summary>
+        public class RuleString : RuleRegex {
+            private static RuleString instance;
+            public static RuleString Instance {
+                get {
+                    if (instance == null) {
+                        instance = new RuleString();
+                    }
+                    return instance;
+                }
+            }
+            private RuleString()
+                : base("\"[^\"]\"") {
+            }
+        }
+        /// <summary>
+        /// like true or false
+        /// </summary>
+        public class RuleBool : RuleRegex {
+            private static RuleBool instance;
+            public static RuleBool Instance {
+                get {
+                    if (instance == null) {
+                        instance = new RuleBool();
+                    }
+                    return instance;
+                }
+            }
+            private RuleBool()
+                : base("(true|false)") {
+            }
+        }
+        /// <summary>
+        /// one or more whitespace
+        /// </summary>
         public class RuleSpace : RuleRegex {
             private static RuleSpace instance;
             public static RuleSpace Instance {
@@ -272,6 +328,26 @@ namespace NppPIALexer2 {
                 : base("[\\s\\t]+") {
             }
         }
+        /// <summary>
+        /// 0 or more whitespace
+        /// </summary>
+       /* public class RuleSpaceOptional : RuleRegex {
+            private static RuleSpaceOptional instance;
+            public static RuleSpaceOptional Instance {
+                get {
+                    if (instance == null) {
+                        instance = new RuleSpaceOptional();
+                    }
+                    return instance;
+                }
+            }
+            private RuleSpaceOptional()
+                : base("[\\s\\t]*[^\\s\\t]") {      thats not working as expected
+            }
+        }*/
+        /// <summary>
+        /// 1 or more EOL
+        /// </summary>
         public class RuleEOL : RuleRegex {
             private static RuleEOL instance;
             public static RuleEOL Instance {
@@ -284,6 +360,34 @@ namespace NppPIALexer2 {
             }
             private RuleEOL()
                 : base("([\r]*[\n])+") {
+            }
+        }
+        public class RuleLPar : RuleRegex {
+            private static RuleLPar instance;
+            public static RuleLPar Instance {
+                get {
+                    if (instance == null) {
+                        instance = new RuleLPar();
+                    }
+                    return instance;
+                }
+            }
+            private RuleLPar()
+                : base(s_ManyWhitespace+"\\(") {
+            }
+        }
+        public class RuleRPar : RuleRegex {
+            private static RuleRPar instance;
+            public static RuleRPar Instance {
+                get {
+                    if (instance == null) {
+                        instance = new RuleRPar();
+                    }
+                    return instance;
+                }
+            }
+            private RuleRPar()
+                : base(s_ManyWhitespace+"\\)") {
             }
         }
         public class RuleNumber : RuleRegex {
@@ -302,6 +406,7 @@ namespace NppPIALexer2 {
         }
         #endregion
         #region keywords
+        //integrated basic types
         public class RuleBaseType : RuleRegex {
             private static RuleBaseType instance;
             public static RuleBaseType Instance {
@@ -313,12 +418,13 @@ namespace NppPIALexer2 {
                 }
             }
             private RuleBaseType()
-                : base(("int|double|bool|string|variant")) {
+                : base("int|double|bool|string|variant",instance) {
             }
         }
+
         #endregion
         #region structures
-        //Variable Declaration      int x       int x=5
+        //Variable Declaration      int x   |    int x=5
         public class RuleDecl : RuleSequence {
             private static RuleDecl instance;
             public static RuleDecl Instance {
@@ -336,6 +442,9 @@ namespace NppPIALexer2 {
                 this.AddNode(RuleEOL.Instance);
             }
         }
+        /// <summary>
+        /// like x=5.12
+        /// </summary>
         public class RuleAssign : RuleSequence {
             private static RuleAssign instance;
             public static RuleAssign Instance {
@@ -349,10 +458,13 @@ namespace NppPIALexer2 {
             private RuleAssign()
                 : base() {
                     this.AddNode(RuleName.Instance);
-                    this.AddNode(RuleSpace.Instance);
-                    this.AddNode(new RuleRegex("="));
-                    this.AddNode(RuleSpace.Instance);
-                    this.AddNode(RuleName.Instance);
+                    this.AddNode(new RuleRegex(s_ManyWhitespace + "=" + s_ManyWhitespace,this));
+                    RuleAlternative x = new RuleAlternative();
+                    x.AddNode(RuleName.Instance);
+                    x.AddNode(RulePlusExpr.Instance);
+                    x.AddNode(RuleString.Instance);
+                    x.AddNode(RuleBool.Instance);
+                    this.AddNode(x);
                     this.AddNode(RuleEOL.Instance);
             }
         }
@@ -369,14 +481,36 @@ namespace NppPIALexer2 {
             private RuleMultExpr() : base() {
                 this.AddNode(RulePlusExpr.Instance);
                 RuleSequence x = new RuleSequence();
-                x.AddNode(new RuleRegex("(\\*|/)"));
+                x.AddNode(new RuleRegex("(\\*|/)",this));
                 x.AddNode(RulePlusExpr.Instance);
                 RuleMultiple y = new RuleMultiple(0);
                 y.AddNode(x);
                 this.AddNode(y);
             }
         }
-        public class RulePlusExpr : RuleSequence {   //('+' / '-')? S(identifier /  number / '(' S expression S ')')
+        /* not supported by sequencer
+        public class PowerExpr : RuleSequence {   //primary_expression (S '^' S primary_expression)? ;
+            private static PowerExpr instance;
+            public static PowerExpr Instance {
+                get {
+                    if (instance == null) {
+                        instance = new PowerExpr();
+                    }
+                    return instance;
+                }
+            }
+            private PowerExpr()
+                : base() {
+                this.AddNode(RulePlusExpr.Instance);
+                RuleSequence x = new RuleSequence();
+                x.AddNode(new RuleRegex("(^)"));
+                x.AddNode(RulePlusExpr.Instance);
+                RuleMultiple y = new RuleMultiple(0);
+                y.AddNode(x);
+                this.AddNode(y);
+            }
+        }*/
+        public class RulePlusExpr : RuleSequence {   //('+' / '-')? S(NAME /  number / '(' S expression S ')')
             private static RulePlusExpr instance;
             public static RulePlusExpr Instance {
                 get {
@@ -388,29 +522,10 @@ namespace NppPIALexer2 {
             }
             private RulePlusExpr()
                 : base() {
-                this.AddNode(new RuleRegex("(\\+|\\-)?"));
+                this.AddNode(new RuleRegex("(\\+|\\-)?",this));
                 RuleAlternative x = new RuleAlternative();
                 x.AddNode(RuleName.Instance);
                 x.AddNode(RuleNumber.Instance);
-                this.AddNode(x);
-            }
-        }
-        public class RulePlusExprOLD___ : RuleAlternative {   //('+' / '-')? S(identifier /  number / '(' S expression S ')')
-            private static RulePlusExprOLD___ instance;
-            public static RulePlusExprOLD___ Instance {
-                get {
-                    if (instance == null) {
-                        instance = new RulePlusExprOLD___();
-                    }
-                    return instance;
-                }
-            }
-            private RulePlusExprOLD___()
-                : base() {
-                this.AddNode(RuleNumber.Instance);
-                RuleSequence x = new RuleSequence();
-                x.AddNode(this);
-                x.AddNode(new RuleRegex("(\\+|\\-)?[0-9]+"));
                 this.AddNode(x);
             }
         }
@@ -427,8 +542,82 @@ namespace NppPIALexer2 {
             private RuleExpr()  : base() {
                 this.AddNode(RuleMultExpr.Instance);
                 RuleSequence x = new RuleSequence();
-                x.AddNode(new RuleRegex("(\\+|\\-)"));
+                x.AddNode(new RuleRegex("(\\+|\\-)",this));
                 x.AddNode(RuleMultExpr.Instance);
+                RuleMultiple y = new RuleMultiple(0);
+                y.AddNode(x);
+                this.AddNode(y);
+            }
+        }
+        public class RuleFunctionDecl : RuleSequence {  //'function ' NAME S*'(' PARAMDECL? ')' S* RETDECL? S* '{' (COMMENT | EOL) FUNCBODY '}' EOL? 
+            private static RuleFunctionDecl instance;
+            public static RuleFunctionDecl Instance {
+                get {
+                    if (instance == null) {
+                        instance = new RuleFunctionDecl();
+                    }
+                    return instance;
+                }
+            }
+            private RuleFunctionDecl()
+                : base() {
+                    this.AddNode(new RuleRegex("function[\\s\\t]+",this));
+                this.AddNode(RuleName.Instance);
+                this.AddNode(RuleLPar.Instance);
+                RuleOption y = new RuleOption();
+                y.AddNode(RuleParamDecl.Instance);
+                this.AddNode(y);
+                this.AddNode(RuleRPar.Instance);
+                y = new RuleOption();
+                y.AddNode(RuleRetDecl.Instance);
+                this.AddNode(y);
+                this.AddNode(RuleEOL.Instance);
+            }
+        }
+        public class RuleParamDecl : RuleSequence {  // BASETYPE S NAME S (, BASETYPE S NAME S )*
+            private static RuleParamDecl instance;
+            public static RuleParamDecl Instance {
+                get {
+                    if (instance == null) {
+                        instance = new RuleParamDecl();
+                    }
+                    return instance;
+                }
+            }
+            private RuleParamDecl()
+                : base() {
+                this.AddNode(RuleBaseType.Instance);
+                this.AddNode(RuleSpace.Instance);
+                this.AddNode(RuleName.Instance);
+                RuleSequence x = new RuleSequence();
+                x.AddNode(new RuleRegex(s_ManyWhitespace + 
+                    "," + s_ManyWhitespace, this)); 
+                x.AddNode(RuleBaseType.Instance);
+                x.AddNode(RuleSpace.Instance);
+                x.AddNode(RuleName.Instance);
+                RuleMultiple y = new RuleMultiple(0);
+                y.AddNode(x);
+                this.AddNode(y);
+            }
+        }
+        public class RuleRetDecl : RuleSequence {  //-> BASETYPE S (, BASETYPE S )*
+            private static RuleRetDecl instance;
+            public static RuleRetDecl Instance {
+                get {
+                    if (instance == null) {
+                        instance = new RuleRetDecl();
+                    }
+                    return instance;
+                }
+            }
+            private RuleRetDecl()
+                : base() {
+                    this.AddNode(new RuleRegex("->" + s_ManyWhitespace, this));
+                this.AddNode(RuleBaseType.Instance);
+                RuleSequence x = new RuleSequence();
+                x.AddNode(new RuleRegex(s_ManyWhitespace +
+                    "," + s_ManyWhitespace, this));
+                x.AddNode(RuleBaseType.Instance);
                 RuleMultiple y = new RuleMultiple(0);
                 y.AddNode(x);
                 this.AddNode(y);
@@ -440,7 +629,9 @@ namespace NppPIALexer2 {
         public Tokenizer() {
             Rules = new RuleOption();
             Rules.AddNode(RuleComment.Instance);
+            Rules.AddNode(RuleFunctionDecl.Instance);
             Rules.AddNode(RuleDecl.Instance);
+            Rules.AddNode(RuleAssign.Instance);
             Rules.AddNode(RuleExpr.Instance);
             Rules.AddNode(RuleEOL.Instance);
         }
@@ -448,7 +639,7 @@ namespace NppPIALexer2 {
             int Pos = 0;
             Token Result;
             LinkedList<Token> Tree = new LinkedList<Token>();
-            
+            DateTime _start=DateTime.Now;
             while(Pos<stream.Length) {
                 Result=Rules.Evaluate(stream, ref Pos);
                 if (Result != null && Result.IsValid()) {
@@ -456,7 +647,9 @@ namespace NppPIALexer2 {
                 } else {
                     break;
                 }
-            }          
+            }
+            DateTime _end = DateTime.Now;
+            TimeSpan x = _start - _end;
             return Tree;
         }
     };
