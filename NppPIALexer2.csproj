@@ -119,6 +119,7 @@
     <Compile Include="Src\ModelDocument.cs" />
     <Compile Include="Src\NPP.cs" />
     <Compile Include="Src\Parser.cs" />
+    <Compile Include="Src\Parser2.cs" />
     <Compile Include="Src\ParserNode.cs" />
     <Compile Include="Src\Project.cs" />
     <Compile Include="Src\Resource.cs" />

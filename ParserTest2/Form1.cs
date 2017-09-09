@@ -13,6 +13,7 @@ namespace ParserTest2 {
             InitializeComponent();
             StringBuilder stringToRead = new StringBuilder();
             stringToRead.AppendLine("int Test");
+            stringToRead.AppendLine("bool Test2=true");
             stringToRead.AppendLine("//a comment");
             stringToRead.AppendLine("int Test2 //another comment");
             stringToRead.AppendLine("Test=3+2*5");
@@ -34,7 +35,7 @@ namespace ParserTest2 {
                 m_Tree = Tree;
             }
             override public void Visit(Tokenizer.Token token) {
-                TreeNode Node = new TreeNode(token.GetValue(m_Index.Count<=1));
+                TreeNode Node = new TreeNode(token.GetValue(m_Index.Count <= 2 && 1 <= m_Index.Count));
                 Node.Tag = token;
                 LinkedList<int>.Enumerator y = m_Index.GetEnumerator();
                 TreeNodeCollection trc = m_Tree;
@@ -50,21 +51,23 @@ namespace ParserTest2 {
                 m_Index.RemoveLast();
             }
         }
-        void TokensToTree(TreeNodeCollection Tree, LinkedList<Tokenizer.Token> Tokens) {
+        void TokensToTree(TreeNodeCollection Tree, Tokenizer.Token Tokens) {
             Tree.Clear();
             TreeNodeBuilder visitor = new TreeNodeBuilder(Tree);
+            Tokens.InspectNodes(visitor);
+            /*
             LinkedList<Tokenizer.Token>.Enumerator x =Tokens.GetEnumerator();
             while (x.MoveNext()) {
                     x.Current.InspectNodes(visitor);
-            }
+            }*/
 
         }
         
         void UpdateTree() { 
             
             Tokenizer test = new Tokenizer( );
-            LinkedList<Tokenizer.Token> Tokens = 
-                test.Tokenize(this.textBox2.Text);
+            //LinkedList<Tokenizer.Token> Tokens = 
+            Tokenizer.Token Tokens=test.Tokenize(this.textBox2.Text);
             LinkedList<Tokenizer.Token>.Enumerator x=Tokens.GetEnumerator();
             while (x.MoveNext()) {
                     Console.WriteLine(x.Current.GetValue(true));
@@ -72,6 +75,7 @@ namespace ParserTest2 {
             treeView1.BeginUpdate();
             TokensToTree(treeView1.Nodes,Tokens);
             treeView1.EndUpdate();
+            treeView1.Nodes[0].Expand();
 
             
         }
