@@ -82,7 +82,7 @@ namespace ParserTest2 {
 
         private void treeView1_AfterSelect(object sender, TreeViewEventArgs e) {
             Tokenizer.Token x = (Tokenizer.Token)e.Node.Tag;
-            this.textBox1.Text = x.GetNodeType();
+            this.textBox1.Text = x.GetNodeType() + "\r\nin\r\n" + x.GetTopNodeType();
         }
 
         private void button1_Click(object sender, EventArgs e) {
