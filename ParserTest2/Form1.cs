@@ -14,6 +14,7 @@ namespace ParserTest2 {
             StringBuilder stringToRead = new StringBuilder();
             stringToRead.AppendLine("int Test");
             stringToRead.AppendLine("bool Test2=true");
+            stringToRead.AppendLine("double Te4=true");
             stringToRead.AppendLine("//a comment");
             stringToRead.AppendLine("int Test2 //another comment");
             stringToRead.AppendLine("Test=3+2*5");
@@ -25,12 +26,7 @@ namespace ParserTest2 {
         public class TreeNodeBuilder : Tokenizer.NodeBuilder {
             TreeNodeCollection m_Tree;
             LinkedList<int> m_Index = new LinkedList<int>();
-            public class Context {
-                TreeNode m_Parent;
-                public Context(TreeNode Parent) {
-                    m_Parent = Parent;
-                }
-            }
+            
             public TreeNodeBuilder(TreeNodeCollection Tree):base() {
                 m_Tree = Tree;
             }
@@ -62,18 +58,18 @@ namespace ParserTest2 {
             }*/
 
         }
-        
+        Tokenizer.Token m_Tokens;
         void UpdateTree() { 
             
             Tokenizer test = new Tokenizer( );
             //LinkedList<Tokenizer.Token> Tokens = 
-            Tokenizer.Token Tokens=test.Tokenize(this.textBox2.Text);
-            LinkedList<Tokenizer.Token>.Enumerator x=Tokens.GetEnumerator();
+            m_Tokens=test.Tokenize(this.textBox2.Text);
+            /*LinkedList<Tokenizer.Token>.Enumerator x=m_Tokens.GetEnumerator();
             while (x.MoveNext()) {
                     Console.WriteLine(x.Current.GetValue(true));
-            }
+            }*/
             treeView1.BeginUpdate();
-            TokensToTree(treeView1.Nodes,Tokens);
+            TokensToTree(treeView1.Nodes,m_Tokens);
             treeView1.EndUpdate();
             treeView1.Nodes[0].Expand();
 
@@ -87,6 +83,20 @@ namespace ParserTest2 {
 
         private void button1_Click(object sender, EventArgs e) {
             UpdateTree();
+        }
+
+        private void button2_Click(object sender, EventArgs e) {
+            textBox3.Clear();
+            if (m_Tokens == null) return;
+            Parser2 parser = new Parser2();
+            parser.ParseTokens(m_Tokens);
+            LinkedList<Parser2.CmdBase>.Enumerator Result=parser.GetResult().GetCmds().GetEnumerator();
+            while (Result.MoveNext()) {
+                textBox3.Text += (Result.Current.HasError() ? 
+                    Result.Current.m_Error : 
+                    Result.Current.AsText()) + "\r\n";
+
+            }
         }
     }
 }
