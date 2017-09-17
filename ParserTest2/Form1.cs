@@ -12,15 +12,19 @@ namespace ParserTest2 {
         public Form1() {
             InitializeComponent();
             StringBuilder stringToRead = new StringBuilder();
+            stringToRead.AppendLine("#include \"StandardObj.seq\"");
             stringToRead.AppendLine("int Test");
+            stringToRead.AppendLine("using \"CAN.lvlibp:CAN.lvclass\" as CAN");
             stringToRead.AppendLine("bool Test2=true");
             stringToRead.AppendLine("double Te4=true");
             stringToRead.AppendLine("//a comment");
             stringToRead.AppendLine("int Test2 //another comment");
             stringToRead.AppendLine("Test=3+2*5");
-            stringToRead.AppendLine("function boom()->int");
-            stringToRead.AppendLine("function kaboom(int count,int size) -> string , double");
+            stringToRead.AppendLine("function boom()->int count");
+            stringToRead.AppendLine("function kaboom(bool count,int size) -> string test, double");
             stringToRead.AppendLine("Test=X\nTest2=Y");
+            stringToRead.AppendLine("{ xcv }");
+
             this.textBox2.Text = stringToRead.ToString();
         }
         public class TreeNodeBuilder : Tokenizer.NodeBuilder {
@@ -78,7 +82,7 @@ namespace ParserTest2 {
 
         private void treeView1_AfterSelect(object sender, TreeViewEventArgs e) {
             Tokenizer.Token x = (Tokenizer.Token)e.Node.Tag;
-            this.textBox1.Text = x.GetNodeType() + "\r\nin\r\n" + x.GetTopNodeType();
+            this.textBox1.Text = x.GetNodeType().ToString() + "\r\nin\r\n" + x.GetTopNodeType().ToString();
         }
 
         private void button1_Click(object sender, EventArgs e) {

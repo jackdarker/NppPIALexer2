@@ -65,14 +65,14 @@ namespace NppPIALexer2 {
                 return m_Text;
             }
             String m_Value;
-            String m_ThisNode;
-            String m_TopNode;
+            System.Type m_ThisNode;
+            System.Type m_TopNode;
             public void SetValue(String value, int Start,Rule TopNode, Rule ThisNode) {
                 m_Value = value ;
                 m_PosStart = Start;
                 m_PosEnd = Start + value.Length;
-                m_ThisNode = ThisNode.GetType().ToString();
-                m_TopNode = TopNode.GetType().ToString();
+                m_ThisNode = ThisNode.GetType();
+                m_TopNode = TopNode.GetType();
                 m_Status = 0;
             }
             public String GetValue(Boolean FullPath) {      
@@ -85,15 +85,15 @@ namespace NppPIALexer2 {
                 }
                 return Out;
             }
-            public String GetNodeType() {
+            public System.Type GetNodeType() {
                 if (m_ThisNode == null)
-                    return "";
+                    return null; //??
                 return m_ThisNode;
 
             }
-            public String GetTopNodeType() {
+            public System.Type GetTopNodeType() {
                 if (m_TopNode == null)
-                    return "";
+                    return null;
                 return m_TopNode;
 
             }
@@ -250,6 +250,9 @@ namespace NppPIALexer2 {
                 return Result;
             }
         }
+        /// <summary>
+        /// Search for String-Pattern
+        /// </summary>
         public class RuleRegex : Rule {
             Regex m_Regex;
             public RuleRegex(Rule Parent,String regex) : base(Parent) {
@@ -292,7 +295,7 @@ namespace NppPIALexer2 {
         }
         public class RuleName : RuleRegex {
             public RuleName(Rule Parent)
-                : base(Parent,"[A-Za-z_][A-Za-z0-9_]*") {
+                : base(Parent, "[A-Za-z_][A-Za-z0-9_]*") {
             }
         }
         /// <summary>
@@ -300,7 +303,7 @@ namespace NppPIALexer2 {
         /// </summary>
         public class RuleString : RuleRegex {
             public RuleString(Rule Parent)
-                : base(Parent,"\"[^\"]\"") {
+                : base(Parent,"\"[^\"]*\"") {
             }
         }
         /// <summary>
@@ -312,6 +315,14 @@ namespace NppPIALexer2 {
             }
         }
         /// <summary>
+        /// Separator like ',' with Spaces
+        /// </summary>
+        public class RuleSeparator : RuleRegex {
+            public RuleSeparator(Rule Parent)
+                : base(Parent, s_ManyWhitespace + "," + s_ManyWhitespace) {
+            }
+        }
+        /// <summary>
         /// one or more whitespace
         /// </summary>
         public class RuleSpace : RuleRegex {
@@ -319,23 +330,15 @@ namespace NppPIALexer2 {
                 : base(Parent,"[ \\t]+") {
             }
         }
+        
         /// <summary>
         /// 0 or more whitespace
         /// </summary>
-       /* public class RuleSpaceOptional : RuleRegex {
-            private static RuleSpaceOptional instance;
-            public static RuleSpaceOptional Instance {
-                get {
-                    if (instance == null) {
-                        instance = new RuleSpaceOptional();
-                    }
-                    return instance;
-                }
+       public class RuleSpaceOptional : RuleRegex {
+           public RuleSpaceOptional(Rule Parent)
+                : base(Parent,"[ \\t]*") {
             }
-            private RuleSpaceOptional()
-                : base("[\\s\\t]*[^\\s\\t]") {      thats not working as expected
-            }
-        }*/
+        }
         /// <summary>
         /// 1 or more EOL
         /// </summary>
@@ -468,6 +471,45 @@ namespace NppPIALexer2 {
                 this.AddNode(y);
             }
         }
+        public class RuleInclude : RuleSequence {   //#include STRING
+            public RuleInclude(Rule Parent)
+                : base(Parent) {
+                    m_Parent = this;
+                    this.AddNode(new RuleRegex(m_Parent, "#include" + s_ManyWhitespace));
+                this.AddNode(new RuleString(m_Parent));
+                this.AddNode(new RuleEOLComment(m_Parent));
+            }
+        }
+        public class RuleUsing : RuleSequence {   //using STRING as NAME
+            public RuleUsing(Rule Parent)
+                : base(Parent) {
+                m_Parent = this;
+                this.AddNode(new RuleRegex(m_Parent, "using" + s_ManyWhitespace));
+                this.AddNode(new RuleString(m_Parent));
+                this.AddNode(new RuleRegex(m_Parent, s_ManyWhitespace+"as"+s_ManyWhitespace));
+                this.AddNode(new RuleName(m_Parent));
+                this.AddNode(new RuleEOLComment(m_Parent));
+            }
+        }
+        public class RuleBody : RuleSequence {   //{ ...  } EOL
+            public RuleBody(Rule Parent)
+                : base(Parent) {
+                    if (Parent == null) m_Parent = this;
+                    RuleAlternative x = new RuleAlternative(m_Parent);
+                    RuleSequence y = new RuleSequence(m_Parent);
+                    y.AddNode(new RuleRegex(m_Parent, "[^{}]+"));
+                    x.AddNode(y);
+                    y = new RuleSequence(m_Parent);
+                    y.AddNode(this);
+                    x.AddNode(y);
+                    RuleMultiple z = new RuleMultiple(this, 0);
+                    z.AddNode(x);
+                this.AddNode(new RuleRegex(m_Parent, "{"+s_ManyWhitespace));
+                this.AddNode(z);
+                this.AddNode(new RuleRegex(m_Parent, "}"+s_ManyWhitespace));
+              //  this.AddNode(new RuleEOLComment(m_Parent));
+            }
+        }
         public class RuleFunctionDecl : RuleSequence {  //'function ' NAME S*'(' PARAMDECL? ')' S* RETDECL? S* '{' (COMMENT | EOL) FUNCBODY '}' EOL? 
             public RuleFunctionDecl(Rule Parent)
                 : base(Parent) {
@@ -478,7 +520,6 @@ namespace NppPIALexer2 {
                 RuleOption y = new RuleOption(m_Parent);
                 y.AddNode(new RuleParamDecl(m_Parent));
                 this.AddNode(y);
-                //this.AddNode(new RuleParamDecl(m_Parent));
                 this.AddNode(new RuleRPar(m_Parent));
                 y = new RuleOption(m_Parent);
                 y.AddNode(new RuleRetDecl(m_Parent));
@@ -486,6 +527,9 @@ namespace NppPIALexer2 {
                 this.AddNode(new RuleEOLComment(m_Parent));
             }
         }
+        /// <summary>
+        /// Parameter Declaration of function, sequencecalls,...
+        /// </summary>
         public class RuleParamDecl : RuleSequence {  // BASETYPE S NAME S (, BASETYPE S NAME S )*
             public RuleParamDecl(Rule Parent)
                 : base(Parent) {
@@ -493,26 +537,39 @@ namespace NppPIALexer2 {
                     this.AddNode(new RuleSpace(this));
                     this.AddNode(new RuleName(this));
                     RuleSequence x = new RuleSequence(this);
-                    x.AddNode(new RuleRegex(this, s_ManyWhitespace +
-                    "," + s_ManyWhitespace));
-                    x.AddNode(new RuleBaseType(this));
-                    x.AddNode(new RuleSpace(this));
-                    x.AddNode(new RuleName(this));
+                    x.AddNode(new RuleSeparator(this));
+                    RuleSequence z = new RuleSequence(this);
+                    z.AddNode(new RuleBaseType(this));
+                    z.AddNode(new RuleSpace(this));
+                    z.AddNode(new RuleName(this));
+                    x.AddNode(z);
                     RuleMultiple y = new RuleMultiple(this, 0);
                 y.AddNode(x);
                 this.AddNode(y);
             }
         }
-        public class RuleRetDecl : RuleSequence {  //-> BASETYPE S (, BASETYPE S )*
+        /// <summary>
+        /// Return Declaration of function
+        /// </summary>
+        public class RuleRetDecl : RuleSequence {  //-> BASETYPE [S NAME ] (, BASETYPE [S NAME])*
             public RuleRetDecl(Rule Parent)
                 : base(Parent) {
-                    this.AddNode(new RuleRegex(this, "->" + s_ManyWhitespace));
-                    this.AddNode(new RuleBaseType(this));
-                    RuleSequence x = new RuleSequence(this);
-                    x.AddNode(new RuleRegex(this, s_ManyWhitespace +
-                    "," + s_ManyWhitespace));
-                    x.AddNode(new RuleBaseType(this));
-                    RuleMultiple y = new RuleMultiple(this, 0);
+                    RuleAlternative w = new RuleAlternative(this);
+                    RuleSequence u = new RuleSequence(this);
+                    u.AddNode(new RuleBaseType(this));
+                    u.AddNode(new RuleSpace(this));
+                    u.AddNode(new RuleName(this));
+                    w.AddNode(u);
+                    u = new RuleSequence(this);
+                    u.AddNode(new RuleBaseType(this));
+                    w.AddNode(u);
+
+                this.AddNode(new RuleRegex(this, "->" + s_ManyWhitespace));
+                this.AddNode(w);
+                RuleSequence x = new RuleSequence(this);
+                x.AddNode(new RuleSeparator(this));
+                x.AddNode(w);
+                RuleMultiple y = new RuleMultiple(this, 0);
                 y.AddNode(x);
                 this.AddNode(y);
             }
@@ -526,9 +583,12 @@ namespace NppPIALexer2 {
             // make sure to add the more specific Rules at the beginning
             Rules = new RuleOption(null);
             Rules.AddNode(new RuleComment(null));
+            Rules.AddNode(new RuleInclude(null));
+            Rules.AddNode(new RuleUsing(null));
             Rules.AddNode( new RuleFunctionDecl(null));
             Rules.AddNode( new RuleDecl(null));
             Rules.AddNode( new RuleAssign(null));
+            Rules.AddNode(new RuleBody(null));
             Rules.AddNode( new RuleEOL(null));
         }
         public Token Tokenize(String stream) {
