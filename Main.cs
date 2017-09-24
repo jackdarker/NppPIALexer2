@@ -493,9 +493,10 @@ namespace NppPIALexer2
                 if (proj != null)
                 {
                     string word = NPP.GetCurrentWord();
+                    string line = NPP.GetLine(NPP.GetCurrentLine());
                     if (word.Length >= 2)
                     {
-                        List<NppPIALexer2.ObjDecl> lst = proj.Model.lookupAll(word,proj.Model.GetRelativePath( curFile));
+                        List<NppPIALexer2.ObjDecl> lst = proj.Model.lookupAll(word,line,proj.Model.GetRelativePath( curFile));
                         //proj.Model.GetObjects(word, curFile, "", out lst);
                         if (enfocus || lst.Count > 0 )//&& !_IsEqual(lst))
                             NPP.ShowAutoCompletion(word.Length, lst);

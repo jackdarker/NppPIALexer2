@@ -120,7 +120,7 @@ namespace NppPIALexer2
         }
 
         /// <summary>
-        /// 获取当前光标所在位置的单词(获取单词的同时会选中单词，并失去编辑焦点)
+        /// Gets the word where the current cursor is located (the word is selected and the edit focus is lost
         /// </summary>
         /// <returns></returns>
         public static string GetCurrentWord2()
@@ -136,7 +136,7 @@ namespace NppPIALexer2
         }
 
         /// <summary>
-        /// 获取当前行，从0开始
+        /// Gets the current row, starting with 0
         /// </summary>
         /// <returns></returns>
         public static int GetCurrentLine()
@@ -151,7 +151,7 @@ namespace NppPIALexer2
             return (int) Win32.SendMessage(PluginBase.GetCurrentScintilla(), SciMsg.SCI_LINEFROMPOSITION, pos, 0);
         }
         /// <summary>
-        /// 获取指定行内容
+        /// Get the specified row contents
         /// </summary>
         /// <param name="lineNo">行号，从0开始</param>
         /// <returns></returns>
@@ -234,7 +234,7 @@ namespace NppPIALexer2
         //}
 
         /// <summary>
-        /// 转到文件的指定行
+        /// Go to the specified line of the file
         /// </summary>
         /// <param name="file"></param>
         /// <param name="lineNo">行号,从0开始</param>
@@ -245,7 +245,7 @@ namespace NppPIALexer2
         }
 
         /// <summary>
-        /// 进入函数定义处
+        /// Go to function definition
         /// </summary>
         /// <param name="file"></param>
         /// <param name="lineNo">行号，从0开始</param>
@@ -276,7 +276,7 @@ namespace NppPIALexer2
         }
 
         /// <summary>
-        /// 转到当前文件的指定行
+        /// Go to the specified line of the current file
         /// </summary>
         /// <param name="lineNo">行号，从0开始</param>
         public static void GoToLine(int lineNo)

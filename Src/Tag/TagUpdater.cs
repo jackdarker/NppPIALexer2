@@ -30,7 +30,7 @@ namespace NppPIALexer2.Tag
             t.Start();
         }
         static void _Work() {
-            int i = 0;
+
             //??Parser _Parser= new Parser();
             foreach (Project project in ProjectManager.Projects) {
                 var files = project.Root.SubFiles2;

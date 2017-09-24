@@ -36,12 +36,7 @@ namespace NppPIALexer2 {
             public Token(Boolean Empty) {
                 if(Empty) m_Status = -1;
             }
-           /* public Token(Token copy) {
-                m_PosEnd = copy.GetPosEnd();
-                m_PosStart = copy.GetPosStart();
-                m_Value = copy.m_Value;
-                m_Type = copy.m_Type;
-            }*/
+           
             int m_Status;
             public Boolean IsValid() {
                 return m_Status == 0;
@@ -57,12 +52,12 @@ namespace NppPIALexer2 {
             public Boolean IsCmd() {
                 return m_Status == -1;
             }
-            String m_Text = "";
+            String m_Error = "";
             public void SetError(String Text) {
-                m_Text = Text;
+                m_Error = Text;
             }
             public string GetError() {
-                return m_Text;
+                return m_Error;
             }
             String m_Value;
             System.Type m_ThisNode;
@@ -77,6 +72,9 @@ namespace NppPIALexer2 {
             }
             public String GetValue(Boolean FullPath) {      
                 String Out = m_Value;//+"(" + m_Type.ToString() + ")";
+                if(m_Error!="") {
+                    Out += m_Error;
+                }
                 if (FullPath) {
                     LinkedList<Token>.Enumerator x = this.GetEnumerator();
                     while (x.MoveNext()) {
@@ -121,11 +119,42 @@ namespace NppPIALexer2 {
         }
         abstract public class Rule {
             protected Rule m_Parent;
+            public int m_Score;
             public Rule(Rule Parent) { 
                 m_Parent = Parent; 
             }
             public bool IsCmd() {
                 return this.Equals(m_Parent);
+            }
+            public void Match() {
+                if(m_Parent != null)
+                    m_Parent.m_Score++;
+                else
+                    m_Score++;
+            }
+            public String m_Error="";
+            public void NoMatch(String Reason) {
+                if(m_Parent != null) {
+                    if(m_Parent.m_Error == "") {
+                        m_Parent.m_Error = Reason;
+                    }
+                } else {
+                    if(m_Error == "") {
+                        m_Error = Reason;
+                    }
+                }
+            }
+            public void ResetScore() {
+                if(m_Parent != null)
+                    m_Parent.m_Score=0;
+                else
+                    m_Score=0;
+            }
+            public int GetScore() {
+                if(m_Parent != null)
+                    return m_Parent.m_Score;
+                else
+                    return m_Score;
             }
             abstract public Token Evaluate(String stream, ref int pos);
 
@@ -146,6 +175,7 @@ namespace NppPIALexer2 {
             }
             public override Token Evaluate(String stream, ref int pos) {
                 int PosSave = pos;
+                int ScoreSave = m_Score;
                 Token ResultA = new Token();
                 Token ResultB = new Token();
 
@@ -154,11 +184,12 @@ namespace NppPIALexer2 {
                     ResultB = Nodes.Current.Evaluate(stream, ref pos);
                     if (ResultB.IsEmpty()) { //drop empty Token
                     } else if(ResultB.IsValid()) {
-                            if (ResultA.IsValid()) {
-                                ResultA.Combine(ResultB);
-                            } else {
-                                ResultA = ResultB;
-                            }
+                        Match();
+                        if (ResultA.IsValid()) {
+                            ResultA.Combine(ResultB);
+                        } else {
+                            ResultA = ResultB;
+                        }
                     } else {
                         pos = PosSave;
                         ResultA = new Token();
@@ -182,6 +213,7 @@ namespace NppPIALexer2 {
                 while (Nodes.MoveNext()) {
                     Result = Nodes.Current.Evaluate(stream, ref pos);
                     if (Result.IsValid() ) {
+                        Match();
                         break;
                     } 
                 }
@@ -208,11 +240,12 @@ namespace NppPIALexer2 {
                     if (ResultB.IsEmpty()) {//drop empty Token
                     } else if (ResultB.IsValid()) {
                         Matches++;
-                            if (ResultA.IsValid()) {
-                                ResultA.Combine(ResultB);
-                            } else {
-                                ResultA = ResultB;
-                            }
+                        Match();
+                        if (ResultA.IsValid()) {
+                            ResultA.Combine(ResultB);
+                        } else {
+                            ResultA = ResultB;
+                        }
                     } 
                     Run = ResultB.IsValid();
                 }
@@ -240,6 +273,7 @@ namespace NppPIALexer2 {
                 while (Nodes.MoveNext()) {
                     Result = Nodes.Current.Evaluate(stream, ref pos);
                     if (Result.IsValid() ) {
+                        Match();
                         break;
                     }
                 }
@@ -268,7 +302,9 @@ namespace NppPIALexer2 {
                     Result = new Token();
                     Result.SetValue(m.Value, m.Index, this.m_Parent,this);
                     pos = Result.GetPosEnd();
+                    Match();
                 } else {
+                    NoMatch(m_Regex.ToString());
                     pos = PosSave;
                 }
                 return Result;
@@ -279,7 +315,8 @@ namespace NppPIALexer2 {
         public class RuleComment : RuleSequence {
             public RuleComment(Rule Parent)   : base(Parent) {
                 this.m_Parent = this;
-                this.AddNode(new RuleRegex(m_Parent,s_ManyWhitespace + "//[^\\r\\n]*"));
+                this.AddNode(new RuleRegex(m_Parent,
+                    s_ManyWhitespace+"[;]*"+s_ManyWhitespace + "//[^\\r\\n]*"));
                 this.AddNode(new RuleEOL(Parent));
             }
         }
@@ -303,7 +340,7 @@ namespace NppPIALexer2 {
         /// </summary>
         public class RuleString : RuleRegex {
             public RuleString(Rule Parent)
-                : base(Parent,"\"[^\"]*\"") {
+                : base(Parent,"\"[^\"\r\n]*\"") {
             }
         }
         /// <summary>
@@ -344,8 +381,31 @@ namespace NppPIALexer2 {
         /// </summary>
         public class RuleEOL : RuleRegex {
             public RuleEOL(Rule Parent)
-                : base(Parent,"([\r]*[\n])+") {
+                : base(Parent,
+                s_ManyWhitespace + "[;]*" + s_ManyWhitespace + "([\r]*[\n])+") {
                     m_Parent=this;
+            }
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        public class RuleEmptyLine : RuleRegex {
+            public RuleEmptyLine(Rule Parent)
+                : base(Parent, "[\t \r]*[\n]") {
+                m_Parent = this;
+            }
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        public class RuleAnyLine : RuleRegex {
+            public RuleAnyLine(Rule Parent)
+                : base(Parent, "[^\r]*[\r]*[\n]") {
+                m_Parent = this;
+            }
+            
+            public void SetError(String Text) {
+                m_Error = Text;
             }
         }
         public class RuleLPar : RuleRegex {
@@ -576,38 +636,92 @@ namespace NppPIALexer2 {
         }
         #endregion
 
-        RuleOption Rules;
-        public Tokenizer() {
-            //add all Rules that could make up one complete Line to a list
-            //this list will be evaluated again and again until every text-line is processed
-            // make sure to add the more specific Rules at the beginning
-            Rules = new RuleOption(null);
-            Rules.AddNode(new RuleComment(null));
-            Rules.AddNode(new RuleInclude(null));
-            Rules.AddNode(new RuleUsing(null));
-            Rules.AddNode( new RuleFunctionDecl(null));
-            Rules.AddNode( new RuleDecl(null));
-            Rules.AddNode( new RuleAssign(null));
-            Rules.AddNode(new RuleBody(null));
-            Rules.AddNode( new RuleEOL(null));
+        RuleEvaluater Rules;
+        public class RuleEvaluater  : RuleOption {
+            public RuleEvaluater()  : base(null) {
+                //add all Rules that could make up one complete Line to a list
+                //this list will be evaluated again and again until every text-line is processed
+                // make sure to add the more specific Rules at the beginning
+                AddNode(new RuleComment(null));
+                AddNode(new RuleInclude(null));
+                AddNode(new RuleUsing(null));
+                AddNode(new RuleFunctionDecl(null));
+                AddNode(new RuleDecl(null));
+                AddNode(new RuleAssign(null));
+                AddNode(new RuleBody(null));
+                AddNode(new RuleEOL(null));
+                AddNode(new RuleEmptyLine(null));
+            }
+            public override Token Evaluate(string stream, ref int pos) {
+                LinkedList<Rule>.Enumerator x=this.m_Nodes.GetEnumerator();
+                while(x.MoveNext()) {
+                    x.Current.ResetScore();
+                }
+                return base.Evaluate(stream, ref pos);
+            }
+            public String GetError() {
+                String _Ret="";
+                int Score = 0;
+                int TmpScore;
+                LinkedList<Rule>.Enumerator x = this.m_Nodes.GetEnumerator();
+                while(x.MoveNext()) {
+                    TmpScore=x.Current.GetScore();
+                    if(Score < TmpScore) {
+                        Score = TmpScore;
+                        _Ret = x.Current.m_Error;
+                    }
+                }
+                return _Ret;
+            }
         }
+        public Tokenizer() {
+            Rules= new RuleEvaluater();
+        }
+        public Token TokenizeFile(String filePath) {
+
+            Token _Ret = new Token();
+            if (!File.Exists(filePath)) 
+                return _Ret;
+
+            string ext = Path.GetExtension(filePath).ToLower();
+            if (string.IsNullOrEmpty(ext) || !ext.Equals(".seq"))    //only .seq files are parsed
+                return _Ret;
+
+            /* TODO
+             * if (resource.getProjectRelativePath().segment(0).equalsIgnoreCase("SOURCE")) {
+                m_IsClassDef = true;  //Version 1   its in //SOURCE//...
+            }
+            if (resource.getProjectRelativePath().segment(0).equalsIgnoreCase("APP")) {
+                m_IsClassDef = true;   //Version 2    its in //APP//PLUGINS//...
+            }*/
+            String _content=File.ReadAllText(filePath);
+            _Ret = Tokenize(_content);
+            Rule Root = new RuleName(null);
+            _Ret.SetValue(filePath, _Ret.GetPosStart(), Root, Root);
+            return _Ret;
+        }
+    
         public Token Tokenize(String stream) {
             int Pos = 0;
             Token Result;
             Token FileNode = new Token();
             Rule Root = new RuleName(null);
-            FileNode.SetValue("MyFile", 0, Root, Root);
+            FileNode.SetValue("", 0, Root, Root);
             DateTime _start=DateTime.Now;
             while(Pos<stream.Length) {
                 Result=Rules.Evaluate(stream, ref Pos);
                 if (Result != null && Result.IsValid()) {
                     FileNode.AddLast(Result);
                 } else {
+                    RuleAnyLine x = new RuleAnyLine(null);
+                    Result=x.Evaluate(stream, ref Pos);
+                    Result.SetError("invalid:"+Rules.GetError() + " at " + Pos.ToString());
+                    FileNode.AddLast(Result);
                     break;
                 }
             }
             DateTime _end = DateTime.Now;
-            TimeSpan x = _start - _end;
+            TimeSpan dt = _start - _end;
             return FileNode;
         }
     };

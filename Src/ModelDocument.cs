@@ -113,7 +113,8 @@ namespace NppPIALexer2 {
         //SEQ_VERSION = Version;
         m_ProjectDir = Path.GetDirectoryName(ProjectPath);
         //TODO	Eclipse shows error because of db when searching all files - how to hide the db
-        InitDB(Path.Combine(m_ProjectDir, "Intelisense.db"));
+        String x=Path.Combine(m_ProjectDir, "Intelisense.db");
+        InitDB(x);
     }
     public bool shutdown() {  //Todo: close DB-stuff
         return true;
@@ -288,7 +289,9 @@ namespace NppPIALexer2 {
     	UpdateObjDecl(_A);
     }
 
-    Parser _parser = new Parser(this, m_ProjectDir);	    	
+   // Parser _parser = new Parser(this, m_ProjectDir);
+    Tokenizer _tokenizer = new Tokenizer();
+    LinkedList<Tokenizer.Token> _Tokens = new LinkedList<Tokenizer.Token>(); 
     List<String> Dirs = new List<String>() ;  //stack of directories relative to _path
     int k=0;
     try {
@@ -297,7 +300,8 @@ namespace NppPIALexer2 {
             FileInfo[] _files = new DirectoryInfo(Dirs[k]).GetFiles();
             for (int i = 0; i < _files.Length; i++ ) {
                 if (_files[i].Extension.Equals(".seq",StringComparison.OrdinalIgnoreCase)) {
-                    _parser.AnalyseFile(_files[i].FullName);
+                    //??_parser.AnalyseFile(_files[i].FullName);
+                    _Tokens.AddLast(_tokenizer.TokenizeFile(_files[i].FullName));
                 }
             }
             DirectoryInfo[] _Dirs = new DirectoryInfo(Dirs[k]).GetDirectories();
@@ -307,10 +311,50 @@ namespace NppPIALexer2 {
             }
             k++;
     	}
+        Parser2 _parser2 = new Parser2(this, m_ProjectDir);
+        _parser2.ParseTokens(_Tokens);
+        //Todo update database with parserresult
+        LinkedList<Parser2.CmdBase>.Enumerator _Cmds;
+        List<String>.Enumerator _Scopes = _parser2.GetScopes().GetEnumerator();
+        while(_Scopes.MoveNext()) {
+           // if(!m_IsClassDef) {//each SEQ includes itself
+            {
+                this.UpdateObjList(new Obj(_Scopes.Current, "", _Scopes.Current, ""));
+            }
+            _Cmds=_parser2.GetCmds(_Scopes.Current).GetEnumerator();
+            while(_Cmds.MoveNext()) {
+                PublishCmdToDB(_Scopes.Current, _Cmds.Current);
+            }
+
+        }
+        
     }
     finally {	
     }
     	       	
+    }
+    void PublishCmdToDB (String Scope, Parser2.CmdBase Cmd ) {
+        if(Cmd.GetType().Equals(typeof(Parser2.CmdDecl))) {
+            Parser2.CmdDecl Cmd2 = (Parser2.CmdDecl)Cmd;
+            Obj _obj = new Obj(Scope, Cmd2.m_Name, Cmd2.m_Type, "m_Comment");
+            UpdateObjList(_obj);
+        } else if(Cmd.GetType().Equals(typeof(Parser2.CmdInclude))) {
+            Parser2.CmdInclude Cmd2 = (Parser2.CmdInclude)Cmd; 
+            Obj _obj = new Obj(Scope, Cmd2.m_Path,
+                 m_ProjectDir + getSeqDir() + "\\" + Cmd2.m_Path, "m_Comment");	//Todo das ist falsch bei Subproject-Includes
+            UpdateObjList(_obj);
+        } else if(Cmd.GetType().Equals(typeof(Parser2.CmdUsing))) {
+            Parser2.CmdUsing Cmd2 = (Parser2.CmdUsing)Cmd;
+            Obj _obj = new Obj(Scope, Cmd2.m_Name,
+                        m_ProjectDir + getSourceDir() + "\\" + Cmd2.m_Path, "m_Comment");
+            UpdateObjList(_obj);
+        } else if(Cmd.GetType().Equals(typeof(Parser2.CmdFunctionDecl))) {
+            Parser2.CmdFunctionDecl Cmd2 = (Parser2.CmdFunctionDecl)Cmd;
+            ObjDecl _objDecl = new ObjDecl(Scope,
+                           /* m_IsClassDef*/false ? ObjDecl.TClassType.tCTFunc : ObjDecl.TClassType.tCTSeq,
+                                Cmd2.m_Name, Cmd2.m_Params.ToString(), Cmd2.m_Returns.ToString(), "m_Comment");
+            UpdateObjDecl(_objDecl);
+        }
     }
     //after building ObjList we now have to compile each class into ObjDecl
     void RebuildClassDefinition() {
@@ -517,8 +561,7 @@ namespace NppPIALexer2 {
             HandleDBError(e);
         }
     }
-      public List<ObjDecl> lookupAll(String Intent, String Scope)
-	  {
+    public List<ObjDecl> lookupAll(String Word, String Intent, String Scope)  {
         //  List<ObjDecl> proposals = new List<ObjDecl>();
 	    
 	    int _EndOfObject=Intent.IndexOf(".");

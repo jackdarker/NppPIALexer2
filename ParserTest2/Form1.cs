@@ -91,14 +91,22 @@ namespace ParserTest2 {
 
         private void button2_Click(object sender, EventArgs e) {
             textBox3.Clear();
+            textBox4.Clear();
             if (m_Tokens == null) return;
             Parser2 parser = new Parser2();
-            parser.ParseTokens(m_Tokens);
-            LinkedList<Parser2.CmdBase>.Enumerator Result=parser.GetResult().GetCmds().GetEnumerator();
-            while (Result.MoveNext()) {
-                textBox3.Text += (Result.Current.HasError() ? 
-                    Result.Current.m_Error : 
-                    Result.Current.AsText()) + "\r\n";
+            LinkedList<Tokenizer.Token> _Tokens = new LinkedList<Tokenizer.Token>();
+            _Tokens.AddLast(m_Tokens);
+            parser.ParseTokens(_Tokens);
+            LinkedList<Parser2.Context.Log>.Enumerator x=parser.GetLogs().GetEnumerator();
+            while(x.MoveNext()) {
+                if(x.Current.m_Error > 0) {
+                    textBox4.Text += x.Current.m_Text +" at "+x.Current.m_Cmd.AsText()+ "\r\n";
+                }
+
+            }
+            LinkedList<Parser2.CmdBase>.Enumerator Result=parser.GetCmds("").GetEnumerator();
+            while(Result.MoveNext()) {
+                textBox3.Text += ( Result.Current.AsText() + "\r\n" );
 
             }
         }
