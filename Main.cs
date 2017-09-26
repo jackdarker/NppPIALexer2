@@ -106,7 +106,7 @@ namespace NppPIALexer2
         {
             // 注册语句解析器
             TagParser.Register(new CSharpTagParser());
-            TagParser.Register(new PythonTagParser());
+            //TagParser.Register(new PythonTagParser());
             TagParser.Register(new CppTagParser());
             TagParser.Register(new CTagParser());
             TagParser.Register(new JavaTagParser());
@@ -347,7 +347,7 @@ namespace NppPIALexer2
         }
 
         /// <summary>
-        /// 显示/隐藏 文件快速定位窗口
+        /// Show/Hide file quick Position Window
         /// </summary>
         internal static void ShowFileSwitcher()
         {
@@ -387,7 +387,7 @@ namespace NppPIALexer2
                 if (_ctntGoToDefinition == null)
                     _ctntGoToDefinition = new ContextMenuStrip();
 
-                Point pos = NPP.GetCurrentPos();
+                Point pos = NPP.GetCurrentPoint();
                 _ctntGoToDefinition.Items.Clear();
                 foreach (ITag tag in lst)
                 {

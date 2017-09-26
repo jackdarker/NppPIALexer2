@@ -561,9 +561,10 @@ namespace NppPIALexer2 {
             HandleDBError(e);
         }
     }
+
     public List<ObjDecl> lookupAll(String Word, String Intent, String Scope)  {
         //  List<ObjDecl> proposals = new List<ObjDecl>();
-	    
+        Intent = Intent.TrimEnd('\r', '\n');
 	    int _EndOfObject=Intent.IndexOf(".");
 	    int _EndOfFunction=Intent.IndexOf("(");
 	    int _EndOfParams=Intent.IndexOf(")");

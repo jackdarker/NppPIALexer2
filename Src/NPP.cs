@@ -157,13 +157,14 @@ namespace NppPIALexer2
         /// <returns></returns>
         public static string GetLine(int lineNo)
         {
-            int lineLength = (int)Win32.SendMessage(PluginBase.GetCurrentScintilla(), SciMsg.SCI_LINELENGTH, lineNo, 0);
-            if (lineLength <= 0)
-                return "";
+            int lineLength = (int)Win32.SendMessage(PluginBase.GetCurrentScintilla(), SciMsg.SCI_GETLINE, lineNo, 0);
+
             StringBuilder sb = new StringBuilder(lineLength);
-            if ((int)Win32.SendMessage(PluginBase.GetCurrentScintilla(), SciMsg.SCI_GETLINE, lineNo, sb) != -1)
-                return sb.ToString();
+            if((int)Win32.SendMessage(PluginBase.GetCurrentScintilla(), SciMsg.SCI_GETLINE, lineNo, sb) != -1) {
+                return sb.ToString(0,lineLength); //seems there is always on char to much returned
+            }
             return "";
+
         }
 
         /// <summary>
@@ -203,10 +204,10 @@ namespace NppPIALexer2
         }
 
         /// <summary>
-        /// 获取当前光标位置
+        /// Get the current cursor position and convert it to point
         /// </summary>
         /// <returns></returns>
-        public static Point GetCurrentPos()
+        public static Point GetCurrentPoint()
         {
             IntPtr curSci = PluginBase.GetCurrentScintilla();
             int currentPos = (int)Win32.SendMessage(curSci, SciMsg.SCI_GETCURRENTPOS, 0, 0);
@@ -285,7 +286,7 @@ namespace NppPIALexer2
         }
 
         /// <summary>
-        /// 获取指定文件中的书签
+        /// Gets the bookmark in the specified file
         /// </summary>
         /// <param name="file"></param>
         /// <returns></returns>

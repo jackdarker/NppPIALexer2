@@ -136,7 +136,7 @@
     <Compile Include="Src\Tag\Language\JavaScript.cs" />
     <Compile Include="Src\Tag\Language\Pascal.cs" />
     <Compile Include="Src\Tag\Language\PHP.cs" />
-    <Compile Include="Src\Tag\Language\Python.cs" />
+    <Compile Include="Src\Tag\Language\SmartLV.cs" />
     <Compile Include="Src\Tag\Language\Ruby.cs" />
     <Compile Include="Src\Tag\TagBase.cs" />
     <Compile Include="Src\Tag\TagCache.cs" />

@@ -31,7 +31,6 @@ namespace NppPIALexer2.Tag
         }
         static void _Work() {
 
-            //??Parser _Parser= new Parser();
             foreach (Project project in ProjectManager.Projects) {
                 var files = project.Root.SubFiles2;
 

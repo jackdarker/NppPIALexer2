@@ -205,34 +205,15 @@ namespace NppPIALexer2.Forms
                     index.FileName2TreeNode_Index[tag.SourceFile] = new List<TreeNode>();
                 index.FileName2TreeNode_Index[tag.SourceFile].Add(n);
 
-                // 对于Python语言，所有的import放到Import文件夹下，所有的Variable放到Variable文件夹下
-                // 对于c++, 所有的宏放到Macro文件夹下, typedef, function, global var放到单独的文件夹下
-                // 对于C, macro, typedef, global var 放入单独的文件夹下
+                // For the Python language, all import is placed under the Import folder and all variable are placed under the variable folder
+                //For C + +, all macros are placed under the Macro folder, TypeDef, function, global var in a separate folder
+                //For C, macro, TypeDef, global var into a separate folder
                 TreeNode parent = null;
                 //if (tag.FullName.IndexOf('.') == -1 || tag.TagType == TagType.CSharp_Namespace)
-                if (tag.FullName == tag.TagName)    // 顶层对象
+                if(tag.FullName == tag.TagName)    // Top-level objects
                 {
-                    if (tag.Lang == Language.Python && tag.TagType == TagType.Python_Import)
-                    {
-                        if (index.PyImportNode == null)
-                        {
-                            index.PyImportNode = new TreeNode("Import", Resource.ClassViewIcon_Python_Import, Resource.ClassViewIcon_Python_Import);
-                            index.PyImportNode.Tag = "PyImportNode";
-                            root.Nodes.Insert(0, index.PyImportNode);
-                        }
-                        parent = index.PyImportNode;
-                    }
-                    else if (tag.Lang == Language.Python && tag.TagType == TagType.Python_Variable)
-                    {
-                        if (index.PyVarNode == null)
-                        {
-                            index.PyVarNode = new TreeNode("Variable", Resource.ClassViewIcon_Python_Variable, Resource.ClassViewIcon_Python_Variable);
-                            index.PyVarNode.Tag = "PyVarNode";
-                            root.Nodes.Insert(0, index.PyVarNode);
-                        }
-                        parent = index.PyVarNode;
-                    }
-                    else if (tag.Lang == Language.Cpp && tag.TagType == TagType.Cpp_Macro || tag.Lang == Language.C && tag.TagType == TagType.C_Macro)
+
+                    if (tag.Lang == Language.Cpp && tag.TagType == TagType.Cpp_Macro || tag.Lang == Language.C && tag.TagType == TagType.C_Macro)
                     {
                         if (index.CppMacroNode == null)
                         {
@@ -272,59 +253,6 @@ namespace NppPIALexer2.Forms
                         }
                         parent = index.CppGlobalVar;
                     }
-                    #region C与C++共用一些结点
-                    //else if (tag.Lang == Language.C && tag.TagType == TagType.C_Macro && string.IsNullOrEmpty(tag.BelongTo))
-                    //{
-                    //    if (index.CMacroNode == null)
-                    //    {
-                    //        index.CMacroNode = new TreeNode("Macro", Resource.ClassViewIcon_C_Macro, Resource.ClassViewIcon_C_Macro);
-                    //        index.CMacroNode.Tag = "CMacroNode";
-                    //        root.Nodes.Insert(0, index.CMacroNode);
-                    //    }
-                    //    parent = index.CMacroNode;
-                    //}
-                    //else if (tag.Lang == Language.C && tag.TagType == TagType.C_Typedef && string.IsNullOrEmpty(tag.BelongTo))
-                    //{
-                    //    if (index.CTypedefNode == null)
-                    //    {
-                    //        index.CTypedefNode = new TreeNode("Typedef", Resource.ClassViewIcon_C_Typedef, Resource.ClassViewIcon_C_Typedef);
-                    //        index.CTypedefNode.Tag = "CTypedefNode";
-                    //        root.Nodes.Insert(0, index.CTypedefNode);
-                    //    }
-                    //    parent = index.CTypedefNode;
-                    //}
-                    //else if (tag.Lang == Language.C && tag.TagType == TagType.C_Variable && string.IsNullOrEmpty(tag.BelongTo))
-                    //{
-                    //    if (index.CGlobalVarNode == null)
-                    //    {
-                    //        index.CGlobalVarNode = new TreeNode("Global Variable", Resource.ClassViewIcon_C_Variable, Resource.ClassViewIcon_C_Variable);
-                    //        index.CGlobalVarNode.Tag = "CGlobalVarNode";
-                    //        root.Nodes.Insert(0, index.CGlobalVarNode);
-                    //    }
-                    //    parent = index.CGlobalVarNode;
-                    //}
-                    #endregion
-                    else if (tag.Lang == Language.JavaScript)
-                    {
-                        if (index.JS == null)
-                        {
-                            index.JS = new TreeNode("JavaScript", Resource.ClassViewIcon_JavaScript, Resource.ClassViewIcon_JavaScript);
-                            index.JS.Tag = "JavaScript";
-                            root.Nodes.Insert(0, index.JS);
-                        }
-                        if (tag.TagType == TagType.JavaScript_Method && tag.TagName.IndexOf('.') > -1)
-                        {
-                            string key = tag.TagName.Substring(0, tag.TagName.IndexOf('.'));
-                            if (index.TagFullName2TreeNode_Index.ContainsKey(key))
-                                parent = index.TagFullName2TreeNode_Index[key];
-                            else
-                                parent = index.JS;
-                        }
-                        else
-                        {
-                            parent = index.JS;
-                        }
-                    }
                     else
                         parent = root;
                 }
@@ -332,7 +260,7 @@ namespace NppPIALexer2.Forms
                 {
                     Utility.Assert(tag.FullName.EndsWith(tag.TagName));
                     string key = tag.FullName.Substring(0, tag.FullName.Length - tag.TagName.Length);
-                    while (key.Length > 0 && key.EndsWith(".") || key.EndsWith(":"))  // 去除最后的成员访问符, 一般是"."， c++里是"::"
+                    while (key.Length > 0 && key.EndsWith(".") || key.EndsWith(":"))  // Remove the last member accessor, generally ".", C + + is "::"
                         key = key.Substring(0, key.Length - 1);
                     if (string.IsNullOrEmpty(key))
                         continue;
@@ -343,7 +271,6 @@ namespace NppPIALexer2.Forms
                     parent = index.TagFullName2TreeNode_Index[key];
                 }
                 _InsertNode(parent, n);
-                //parent.Nodes.Add(n);
             }
         }
 
