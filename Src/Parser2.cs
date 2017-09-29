@@ -5,7 +5,8 @@ using System.Text;
 
 namespace NppPIALexer2 {
     /// <summary>
-    /// the parser uses the Token-tree to build commands
+    /// the parser implements 
+    /// a visitor inspects every Token in a Tree and converts them to a list of Cmds
     /// it also checks for all kind of errors like assigning a bool to an int, colliding functionnames,...
     /// </summary>
     public class Parser2 : Tokenizer.NodeBuilder {
@@ -27,13 +28,13 @@ namespace NppPIALexer2 {
             m_Evaluators.AddLast(new CmdInvalid());
         }
         //////////////////////////////////////////////////
-        #region Rulechecks
+#region Rulechecks
         /// <summary>
         /// 
         /// </summary>
         public class RuleWrongVariableType { 
         }
-        #endregion
+#endregion
         /// ///////////////////////////////////////////////
 #region Cmds
         abstract public class CmdBase {
@@ -316,111 +317,8 @@ namespace NppPIALexer2 {
             }
         }
 #endregion
-        /// <summary>
-        /// this visitor inspects every Token in a Tree and converts them to a list of Cmds
-        /// </summary>
-       /* public class Builder : Tokenizer.NodeBuilder {
-            public class Context {
-                protected Dictionary<String, LinkedList<CmdBase>> m_Cmds = new Dictionary<String, LinkedList<CmdBase>>();
-                public Context() {
-                }
-                public System.Type m_ActualCmd;
-                public void AddCmd(String Scope,CmdBase Cmd) {
-                    if(m_Cmds.ContainsKey(Scope)) {
-                    } else {
-                        m_Cmds.Add(Scope, new LinkedList<CmdBase>());
-                    }
-                    m_Cmds[Scope].AddLast(Cmd);
-                }
-                public LinkedList<CmdBase> GetCmds(String Scope) {
-                    if(m_Cmds.ContainsKey(Scope)) {
-                        return m_Cmds[Scope];
-                    } else {
-                        return null;
-                    }
-                }
-                public void ResetCmds(String Scope) {
-                    if(m_Cmds.ContainsKey(Scope)) {
-                        m_Cmds.Remove(Scope);
-                    }
-                }
-                public List<String> GetScopes(){
-                    return m_Cmds.Keys.ToList();
-                }
-                public struct Log {
-                    public int m_Error;
-                    public String m_Text;
-                }
-                protected LinkedList<Log> m_Logs = new LinkedList<Log>();
-                public void AddLog(int Error, String Text) {
-                    Log x = new Log();
-                    x.m_Error = Error;
-                    x.m_Text = Text;
-                    m_Logs.AddLast(x);
-                }
-                public LinkedList<Log> GetLogs() {
-                    return m_Logs;
-                }
-            }
-            Context m_Context;
+        
 
-            protected LinkedList<CmdBase> m_Evaluators = new LinkedList<CmdBase>();
-            public Builder()
-                : base() {
-                    m_Context = new Context();
-                    m_Evaluators.AddLast(new CmdDecl());
-                    m_Evaluators.AddLast(new CmdFunctionDecl());
-                    m_Evaluators.AddLast(new CmdUsing());
-                    m_Evaluators.AddLast(new CmdInclude());    
-                    m_Evaluators.AddLast(new CmdInvalid());
-                    
-            }
-            /// <summary>
-            /// this needs to be called before processing next file token
-            /// </summary>
-            /// <param name="Scope"></param>
-            public void ResetState(String Scope) {
-                m_IsRoot = true;
-                m_Scope=Scope;
-                m_Context.ResetCmds(Scope);
-            }
-            bool m_IsRoot = false;
-            String m_Scope = "";
-            override public void Visit(Tokenizer.Token Token) {
-                if (m_IsRoot) {  //processing Root Node
-                    m_IsRoot = false;
-                    LinkedList<Tokenizer.Token>.Enumerator x = Token.GetEnumerator();
-                    while (x.MoveNext()) {
-                        x.Current.InspectNodes(this);
-                    }
-                } else { //inspecting a cmd token
-                    m_Context.m_ActualCmd = Token.GetTopNodeType();
-                    LinkedList<CmdBase>.Enumerator y = m_Evaluators.GetEnumerator();
-                    while (y.MoveNext()) {
-                        if (y.Current.TryParse(m_Context, Token)) {
-                            CmdBase _x = y.Current.Copy();
-                            m_Context.AddCmd(m_Scope,_x);
-                            break;
-                        } else { //no cmd for this Token
-                        }
-                    }
-
-                }
-            }
-            public Context GetResult() {
-                return m_Context;
-            }
-        }
-        Builder m_Builder; */
-        /*public Parser2() {
-            m_Builder = new Builder();
-        }
-
-        /*public void ParseTokens(Tokenizer.Token token) {   
-            m_Builder.ResetState(token.GetValue(false));
-            token.InspectNodes(m_Builder);
-            Verify();
-        }*/
             public class Context {
                 protected Dictionary<String, LinkedList<CmdBase>> m_Cmds = new Dictionary<String, LinkedList<CmdBase>>();
                 public Context() {

@@ -131,8 +131,8 @@ namespace NppPIALexer2.Forms
             _updateClassView = new UpdateClassViewDelegate(_TagCache_CacheUpdated);
             TagCache.CacheUpdated += new CacheUpdated(TagCache_CacheUpdated);
 
-            // 窗口初始化的时候，从内容中加载所有的标签。
-            // 以后标签的更改，通过事件回调来修改
+            // When the window is initialized, all tags are loaded from the content.
+            //Changes to the label after the event callback to modify
             _LoadClassView();
         }
 
@@ -145,7 +145,7 @@ namespace NppPIALexer2.Forms
         }
 
         /// <summary>
-        ///  标签有更改时更新界面
+        ///  Update interface when label changes
         /// </summary>
         /// <param name="file"></param>
         /// <param name="op"></param>
@@ -176,13 +176,18 @@ namespace NppPIALexer2.Forms
                 _InsertTags(root, TagCache.GetTags(e.File));
             }
         }
-
+        void _InsertTags(TreeNode root, List<ITag> tags) {
+            string _Scope = NPP.GetCurrentFile();
+            foreach(Project proj in ProjectManager.Projects) { 
+                proj.Model.GetObjects("")
+            }
+        }
         /// <summary>
         /// 将标签添加到浏览树
         /// </summary>
         /// <param name="root"></param>
         /// <param name="tags"></param>
-        void _InsertTags(TreeNode root, List<ITag> tags)
+        void _InsertTags2(TreeNode root, List<ITag> tags)
         {
             if (tags.Count == 0)
                 return;

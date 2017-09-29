@@ -40,7 +40,7 @@ namespace NppPIALexer2.Tag
         Pascal,
         Perl,
         PHP,
-        Python,
+        SmartLV,
         REXX,
         Ruby,
         Scheme,

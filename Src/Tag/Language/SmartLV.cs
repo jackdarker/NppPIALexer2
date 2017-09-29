@@ -16,7 +16,8 @@ namespace NppPIALexer2.Tag
         {
             node.Text = TagName;
             node.ToolTipText = SourceFile;
-            switch (TagType)
+            node.ImageIndex = node.SelectedImageIndex = Resource.ClassViewIcon_Python_Class;
+            /*switch (TagType)
             {
                 case TagType.SmartLVTag_Class:
                     node.ImageIndex = node.SelectedImageIndex = Resource.ClassViewIcon_Python_Class;
@@ -36,7 +37,7 @@ namespace NppPIALexer2.Tag
                 case TagType.Python_Field:
                     node.ImageIndex = node.SelectedImageIndex = Resource.ClassViewIcon_Python_Field;
                     return false;
-            }
+            }*/
             return true;
         }
     }

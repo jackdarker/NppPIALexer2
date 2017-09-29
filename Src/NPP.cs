@@ -11,7 +11,7 @@ namespace NppPIALexer2
     public class NPP
     {
         /// <summary>
-        /// 获取当前打开的文件
+        /// Get the currently open file
         /// </summary>
         /// <returns></returns>
         public static string GetCurrentFile()

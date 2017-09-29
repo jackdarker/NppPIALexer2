@@ -33,7 +33,6 @@ namespace NppPIALexer2 {
 	private	String m_ClassID;
 	private	String m_Descr;
 }
-
     public class ObjDecl {
 
 	public enum TClassType { 
@@ -70,7 +69,7 @@ namespace NppPIALexer2 {
 
 }
     public class ModelDocument : IDisposable {
-        public static String FileExtension = ".seq";
+    public static String FileExtension = ".seq";
     public static List<String> BASIC_TYPES {
         get {
             var ret = new List<String>();
