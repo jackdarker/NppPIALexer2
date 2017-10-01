@@ -12,6 +12,7 @@ namespace ParserTest2 {
         public Form1() {
             InitializeComponent();
             StringBuilder stringToRead = new StringBuilder();
+            stringToRead.AppendLine("using \"UserManager.lvlibp:UserManager.lvclass\" as User");
             stringToRead.AppendLine("#include \"StandardObj.seq\"");
             stringToRead.AppendLine("int Test");
             stringToRead.AppendLine("using \"CAN.lvlibp:CAN.lvclass\" as CAN");
@@ -82,7 +83,10 @@ namespace ParserTest2 {
 
         private void treeView1_AfterSelect(object sender, TreeViewEventArgs e) {
             Tokenizer.Token x = (Tokenizer.Token)e.Node.Tag;
-            this.textBox1.Text = x.GetNodeType().ToString() + "\r\nin\r\n" + x.GetTopNodeType().ToString();
+            this.textBox1.Text = x.GetNodeType().ToString();
+            if(x.GetTopNodeType()!=null) {
+                this.textBox1.Text += "\r\nin\r\n" + x.GetTopNodeType().ToString();
+            }
         }
 
         private void button1_Click(object sender, EventArgs e) {
@@ -93,7 +97,7 @@ namespace ParserTest2 {
             textBox3.Clear();
             textBox4.Clear();
             if (m_Tokens == null) return;
-            Parser2 parser = new Parser2();
+            Parser2 parser = new Parser2(null, "rest");
             LinkedList<Tokenizer.Token> _Tokens = new LinkedList<Tokenizer.Token>();
             _Tokens.AddLast(m_Tokens);
             parser.ParseTokens(_Tokens);

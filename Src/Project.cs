@@ -593,7 +593,7 @@ namespace NppPIALexer2
         }
 
         /// <summary>
-        /// 找到文件所在的项目
+        /// Locate the project where the file resides
         /// </summary>
         /// <param name="file"></param>
         /// <returns></returns>
@@ -606,7 +606,7 @@ namespace NppPIALexer2
         }
 
         /// <summary>
-        /// 获取文件对应的ProjectItem
+        /// Gets the file's corresponding ProjectItem
         /// </summary>
         /// <param name="file"></param>
         /// <returns></returns>

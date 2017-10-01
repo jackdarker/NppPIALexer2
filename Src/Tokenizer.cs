@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
+using NppPIALexer2.Forms;
 
 namespace NppPIALexer2 {
     public class Tokenizer {
@@ -336,7 +337,7 @@ namespace NppPIALexer2 {
             }
         }
         /// <summary>
-        /// like "asd43214fdg"
+        /// like "asd 4.3 ;214fdg"
         /// </summary>
         public class RuleString : RuleRegex {
             public RuleString(Rule Parent)
@@ -540,14 +541,20 @@ namespace NppPIALexer2 {
                 this.AddNode(new RuleEOLComment(m_Parent));
             }
         }
-        public class RuleUsing : RuleSequence {   //using STRING as NAME
+        public class RuleUsing : RuleSequence {   //using STRING as NAME  or using STRING
             public RuleUsing(Rule Parent)
                 : base(Parent) {
                 m_Parent = this;
                 this.AddNode(new RuleRegex(m_Parent, "using" + s_ManyWhitespace));
                 this.AddNode(new RuleString(m_Parent));
-                this.AddNode(new RuleRegex(m_Parent, s_ManyWhitespace+"as"+s_ManyWhitespace));
-                this.AddNode(new RuleName(m_Parent));
+                
+                RuleSequence x = new RuleSequence(m_Parent);
+                x.AddNode(new RuleRegex(m_Parent, s_ManyWhitespace+"as"+s_ManyWhitespace));
+                x.AddNode(new RuleName(m_Parent));
+               
+                RuleOption y = new RuleOption(m_Parent);
+                y.AddNode(x);
+                this.AddNode(y);
                 this.AddNode(new RuleEOLComment(m_Parent));
             }
         }
@@ -695,6 +702,7 @@ namespace NppPIALexer2 {
                 m_IsClassDef = true;   //Version 2    its in //APP//PLUGINS//...
             }*/
             String _content=File.ReadAllText(filePath);
+            Log.getInstance().Add("Tokenize " + filePath, Log.EnuSeverity.Info, "");
             _Ret = Tokenize(_content);
             Rule Root = new RuleName(null);
             _Ret.SetValue(filePath, _Ret.GetPosStart(), Root, Root);
@@ -717,6 +725,7 @@ namespace NppPIALexer2 {
                     Result=x.Evaluate(stream, ref Pos);
                     Result.SetError("invalid:"+Rules.GetError() + " at " + Pos.ToString());
                     FileNode.AddLast(Result);
+                    Log.getInstance().Add("invalid:" + Rules.GetError() + " at " + Pos.ToString(),Log.EnuSeverity.Warn,"");
                     break;
                 }
             }

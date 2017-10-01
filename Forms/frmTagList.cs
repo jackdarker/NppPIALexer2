@@ -123,14 +123,30 @@ namespace NppPIALexer2.Forms
 
         delegate void UpdateClassViewDelegate(CacheUpdatedArgs e);
         UpdateClassViewDelegate _updateClassView;
+        delegate void UpdateViewDelegate(String File);
+        UpdateViewDelegate _DGupdateView;
+        //called by Event
+        void OnLogChanged(String File) {
+            while(!this.IsHandleCreated)
+                Thread.Sleep(1);
+            this.Invoke(_DGupdateView, new Object[] { File });
+        }
 
+        void _UpdateView(String File) {
+            TreeNode root = tvClassView.Nodes[0]; //TODO
+            _InsertTags(root, TagCache.GetTags(File));
+        }
+
+        TreeNode m_RootNode;
         public frmTagList()
         {
             InitializeComponent();
+            
             tvClassView.ImageList = Resource.ClassViewImgList;
             _updateClassView = new UpdateClassViewDelegate(_TagCache_CacheUpdated);
             TagCache.CacheUpdated += new CacheUpdated(TagCache_CacheUpdated);
-
+            _DGupdateView = new UpdateViewDelegate(_UpdateView);
+            Main.getInstance().EvtFileBufferChanged += new Main.FileBufferChanged(OnLogChanged);
             // When the window is initialized, all tags are loaded from the content.
             //Changes to the label after the event callback to modify
             _LoadClassView();
@@ -153,6 +169,7 @@ namespace NppPIALexer2.Forms
         {
             // 删除结点
             TreeNode root = tvClassView.Nodes[e.ProjectIndex];
+            /*
             ClassViewIndex index = root.Tag as ClassViewIndex;
             if (index.FileName2TreeNode_Index.ContainsKey(e.File))
             {
@@ -169,18 +186,47 @@ namespace NppPIALexer2.Forms
                     if (node.Nodes.Count == 0)  // 没有子结点的情况下才删除。像命名空间往往有很多子结点
                         node.Remove();  // throw new exception?
                 }
-            }
+            }*/
             // 如果是Update操作，添加结点
             if (e.Operator == Operator.Update)
             {
                 _InsertTags(root, TagCache.GetTags(e.File));
             }
         }
+        /// <summary>
+        /// Update tree for current active document
+        /// </summary>
+        /// <param name="root"></param>
+        /// <param name="tags"></param>
         void _InsertTags(TreeNode root, List<ITag> tags) {
             string _Scope = NPP.GetCurrentFile();
-            foreach(Project proj in ProjectManager.Projects) { 
-                proj.Model.GetObjects("")
+            Project proj=ProjectManager.GetProjectByItsFile(_Scope);
+            ModelDocument _Model = proj.Model;
+            _Scope = _Model.GetRelativePath(_Scope);
+            List<Obj>.Enumerator _Objs =_Model.GetObjects(_Scope).GetEnumerator();
+            TreeNode parent = new TreeNode(_Scope);
+            parent.BeginEdit();
+            while (_Objs.MoveNext()) {
+                TreeNode node = new TreeNode();
+                node.Text = _Objs.Current.ClassID()+" "+_Objs.Current.Name();
+                node.Tag = _Objs.Current;
+                node.ImageIndex = node.SelectedImageIndex = Resource.ClassViewIcon_Cpp_Variable;
+                node.ToolTipText = _Objs.Current.Description();
+                parent.Nodes.Add(node);
             }
+            List<ObjDecl>.Enumerator _ObjsDecl = _Model.GetFunctions(_Scope).GetEnumerator();
+            while(_ObjsDecl.MoveNext()) {
+                TreeNode node = new TreeNode();
+                node.Text = _ObjsDecl.Current.Function();
+                node.Tag = _ObjsDecl.Current;
+                node.ImageIndex = node.SelectedImageIndex = Resource.ClassViewIcon_Cpp_Function;
+                node.ToolTipText = _ObjsDecl.Current.Description();
+                parent.Nodes.Add(node);
+            }
+            parent.EndEdit(false);
+            tvClassView.Nodes.Clear();
+            tvClassView.Nodes.Add(parent);
+            tvClassView.ExpandAll();
         }
         /// <summary>
         /// 将标签添加到浏览树
@@ -547,6 +593,10 @@ namespace NppPIALexer2.Forms
                     Jump.Cursor.Go();
                 }
             }
+        }
+
+        private void frmTagList_Load(object sender, EventArgs e) {
+
         }
 
     }

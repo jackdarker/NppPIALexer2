@@ -35,7 +35,13 @@
             this.tbtnNext = new System.Windows.Forms.ToolStripButton();
             this.tbtnRefresh = new System.Windows.Forms.ToolStripButton();
             this.tvClassView = new System.Windows.Forms.TreeView();
+            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.textBox1 = new System.Windows.Forms.TextBox();
             this.tbar.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
+            this.splitContainer1.Panel1.SuspendLayout();
+            this.splitContainer1.Panel2.SuspendLayout();
+            this.splitContainer1.SuspendLayout();
             this.SuspendLayout();
             // 
             // tbar
@@ -49,7 +55,7 @@
             this.tbar.Location = new System.Drawing.Point(0, 0);
             this.tbar.Name = "tbar";
             this.tbar.RenderMode = System.Windows.Forms.ToolStripRenderMode.Professional;
-            this.tbar.Size = new System.Drawing.Size(221, 25);
+            this.tbar.Size = new System.Drawing.Size(276, 25);
             this.tbar.TabIndex = 0;
             this.tbar.Text = "toolStrip1";
             // 
@@ -104,25 +110,59 @@
             // tvClassView
             // 
             this.tvClassView.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tvClassView.Location = new System.Drawing.Point(0, 25);
+            this.tvClassView.Location = new System.Drawing.Point(0, 0);
             this.tvClassView.Name = "tvClassView";
             this.tvClassView.ShowNodeToolTips = true;
-            this.tvClassView.Size = new System.Drawing.Size(221, 372);
+            this.tvClassView.Size = new System.Drawing.Size(276, 300);
             this.tvClassView.TabIndex = 1;
             this.tvClassView.DoubleClick += new System.EventHandler(this.tvClassView_DoubleClick);
             this.tvClassView.KeyDown += new System.Windows.Forms.KeyEventHandler(this.tvClassView_KeyDown);
             // 
+            // splitContainer1
+            // 
+            this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.splitContainer1.Location = new System.Drawing.Point(0, 25);
+            this.splitContainer1.Name = "splitContainer1";
+            this.splitContainer1.Orientation = System.Windows.Forms.Orientation.Horizontal;
+            // 
+            // splitContainer1.Panel1
+            // 
+            this.splitContainer1.Panel1.Controls.Add(this.tvClassView);
+            // 
+            // splitContainer1.Panel2
+            // 
+            this.splitContainer1.Panel2.Controls.Add(this.textBox1);
+            this.splitContainer1.Size = new System.Drawing.Size(276, 555);
+            this.splitContainer1.SplitterDistance = 300;
+            this.splitContainer1.TabIndex = 2;
+            // 
+            // textBox1
+            // 
+            this.textBox1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.textBox1.Location = new System.Drawing.Point(0, 0);
+            this.textBox1.Multiline = true;
+            this.textBox1.Name = "textBox1";
+            this.textBox1.ScrollBars = System.Windows.Forms.ScrollBars.Horizontal;
+            this.textBox1.Size = new System.Drawing.Size(276, 251);
+            this.textBox1.TabIndex = 0;
+            // 
             // frmTagList
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(221, 397);
-            this.Controls.Add(this.tvClassView);
+            this.ClientSize = new System.Drawing.Size(276, 580);
+            this.Controls.Add(this.splitContainer1);
             this.Controls.Add(this.tbar);
             this.Name = "frmTagList";
             this.Text = "frmTagList";
+            this.Load += new System.EventHandler(this.frmTagList_Load);
             this.tbar.ResumeLayout(false);
             this.tbar.PerformLayout();
+            this.splitContainer1.Panel1.ResumeLayout(false);
+            this.splitContainer1.Panel2.ResumeLayout(false);
+            this.splitContainer1.Panel2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
+            this.splitContainer1.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -137,5 +177,7 @@
         private System.Windows.Forms.ToolStripButton tbtnPrev;
         private System.Windows.Forms.ToolStripButton tbtnNext;
         private System.Windows.Forms.ToolStripTextBox ttxtSearchText;
+        private System.Windows.Forms.SplitContainer splitContainer1;
+        private System.Windows.Forms.TextBox textBox1;
     }
 }

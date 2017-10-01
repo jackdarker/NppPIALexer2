@@ -52,6 +52,7 @@
             this.clearJumpListToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator7 = new System.Windows.Forms.ToolStripSeparator();
             this.tbtnSetting = new System.Windows.Forms.ToolStripButton();
+            this.tbtnToggleFold = new System.Windows.Forms.ToolStripButton();
             this.tvProj = new System.Windows.Forms.TreeView();
             this.dlgCreateProject = new System.Windows.Forms.SaveFileDialog();
             this.ctntFile = new System.Windows.Forms.ContextMenuStrip(this.components);
@@ -84,7 +85,7 @@
             this.ctntGotoDefinition = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.dlgGeneratePeoj = new System.Windows.Forms.FolderBrowserDialog();
             this.dlgAddExistFolder = new System.Windows.Forms.FolderBrowserDialog();
-            this.tbtnToggleFold = new System.Windows.Forms.ToolStripButton();
+            this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.tbar.SuspendLayout();
             this.ctntFile.SuspendLayout();
             this.ctntFolder.SuspendLayout();
@@ -127,38 +128,38 @@
             // newToolStripMenuItem
             // 
             this.newToolStripMenuItem.Name = "newToolStripMenuItem";
-            this.newToolStripMenuItem.Size = new System.Drawing.Size(228, 22);
+            this.newToolStripMenuItem.Size = new System.Drawing.Size(216, 22);
             this.newToolStripMenuItem.Text = "New Project";
             this.newToolStripMenuItem.Click += new System.EventHandler(this.tbtnAddProj_Click);
             // 
             // tbtnGenerateProject
             // 
             this.tbtnGenerateProject.Name = "tbtnGenerateProject";
-            this.tbtnGenerateProject.Size = new System.Drawing.Size(228, 22);
+            this.tbtnGenerateProject.Size = new System.Drawing.Size(216, 22);
             this.tbtnGenerateProject.Text = "Generate Project From Folder";
             this.tbtnGenerateProject.Click += new System.EventHandler(this.tbtnGenerateProject_Click);
             // 
             // toolStripSeparator8
             // 
             this.toolStripSeparator8.Name = "toolStripSeparator8";
-            this.toolStripSeparator8.Size = new System.Drawing.Size(225, 6);
+            this.toolStripSeparator8.Size = new System.Drawing.Size(213, 6);
             // 
             // openProjectToolStripMenuItem
             // 
             this.openProjectToolStripMenuItem.Name = "openProjectToolStripMenuItem";
-            this.openProjectToolStripMenuItem.Size = new System.Drawing.Size(228, 22);
+            this.openProjectToolStripMenuItem.Size = new System.Drawing.Size(216, 22);
             this.openProjectToolStripMenuItem.Text = "Open Project";
             this.openProjectToolStripMenuItem.Click += new System.EventHandler(this.tbtnLoadProj_Click);
             // 
             // toolStripSeparator9
             // 
             this.toolStripSeparator9.Name = "toolStripSeparator9";
-            this.toolStripSeparator9.Size = new System.Drawing.Size(225, 6);
+            this.toolStripSeparator9.Size = new System.Drawing.Size(213, 6);
             // 
             // unloadAllProjectsToolStripMenuItem
             // 
             this.unloadAllProjectsToolStripMenuItem.Name = "unloadAllProjectsToolStripMenuItem";
-            this.unloadAllProjectsToolStripMenuItem.Size = new System.Drawing.Size(228, 22);
+            this.unloadAllProjectsToolStripMenuItem.Size = new System.Drawing.Size(216, 22);
             this.unloadAllProjectsToolStripMenuItem.Text = "Unload All Projects";
             this.unloadAllProjectsToolStripMenuItem.Click += new System.EventHandler(this.unloadAllProjectsToolStripMenuItem_Click);
             // 
@@ -192,6 +193,7 @@
             this.tbtnOtherTool.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.tbtnOtherTool.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.taskListToolStripMenuItem,
+            this.toolStripMenuItem1,
             this.fileSwitcherToolStripMenuItem,
             this.toolStripSeparator6,
             this.autoCompletionToolStripMenuItem,
@@ -210,9 +212,9 @@
             this.taskListToolStripMenuItem.Name = "taskListToolStripMenuItem";
             this.taskListToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)(((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Shift) 
             | System.Windows.Forms.Keys.B)));
-            this.taskListToolStripMenuItem.Size = new System.Drawing.Size(265, 22);
-            this.taskListToolStripMenuItem.Text = "Task List";
-            this.taskListToolStripMenuItem.Click += new System.EventHandler(this.taskListToolStripMenuItem_Click);
+            this.taskListToolStripMenuItem.Size = new System.Drawing.Size(251, 22);
+            this.taskListToolStripMenuItem.Text = "Log List";
+            this.taskListToolStripMenuItem.Click += new System.EventHandler(this.LogListToolStripMenuItem_Click);
             // 
             // fileSwitcherToolStripMenuItem
             // 
@@ -220,20 +222,20 @@
             this.fileSwitcherToolStripMenuItem.Name = "fileSwitcherToolStripMenuItem";
             this.fileSwitcherToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)(((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Shift) 
             | System.Windows.Forms.Keys.F)));
-            this.fileSwitcherToolStripMenuItem.Size = new System.Drawing.Size(265, 22);
+            this.fileSwitcherToolStripMenuItem.Size = new System.Drawing.Size(251, 22);
             this.fileSwitcherToolStripMenuItem.Text = "File Switcher";
             this.fileSwitcherToolStripMenuItem.Click += new System.EventHandler(this.fileSwitcherToolStripMenuItem_Click);
             // 
             // toolStripSeparator6
             // 
             this.toolStripSeparator6.Name = "toolStripSeparator6";
-            this.toolStripSeparator6.Size = new System.Drawing.Size(262, 6);
+            this.toolStripSeparator6.Size = new System.Drawing.Size(248, 6);
             // 
             // autoCompletionToolStripMenuItem
             // 
             this.autoCompletionToolStripMenuItem.Name = "autoCompletionToolStripMenuItem";
             this.autoCompletionToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.J)));
-            this.autoCompletionToolStripMenuItem.Size = new System.Drawing.Size(265, 22);
+            this.autoCompletionToolStripMenuItem.Size = new System.Drawing.Size(251, 22);
             this.autoCompletionToolStripMenuItem.Text = "Auto Completion";
             this.autoCompletionToolStripMenuItem.Click += new System.EventHandler(this.autoCompletionToolStripMenuItem_Click);
             // 
@@ -242,7 +244,7 @@
             this.goToDefinitionToolStripMenuItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.goToDefinitionToolStripMenuItem.Name = "goToDefinitionToolStripMenuItem";
             this.goToDefinitionToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F12;
-            this.goToDefinitionToolStripMenuItem.Size = new System.Drawing.Size(265, 22);
+            this.goToDefinitionToolStripMenuItem.Size = new System.Drawing.Size(251, 22);
             this.goToDefinitionToolStripMenuItem.Text = "Go To Definition";
             this.goToDefinitionToolStripMenuItem.Click += new System.EventHandler(this.GotoDefinition_Click);
             // 
@@ -251,7 +253,7 @@
             this.jumpBackToolStripMenuItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.jumpBackToolStripMenuItem.Name = "jumpBackToolStripMenuItem";
             this.jumpBackToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.Left)));
-            this.jumpBackToolStripMenuItem.Size = new System.Drawing.Size(265, 22);
+            this.jumpBackToolStripMenuItem.Size = new System.Drawing.Size(251, 22);
             this.jumpBackToolStripMenuItem.Text = "Jump Back";
             this.jumpBackToolStripMenuItem.Click += new System.EventHandler(this.jumpBackToolStripMenuItem_Click);
             // 
@@ -260,7 +262,7 @@
             this.jumpForwardToolStripMenuItem.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.jumpForwardToolStripMenuItem.Name = "jumpForwardToolStripMenuItem";
             this.jumpForwardToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.Right)));
-            this.jumpForwardToolStripMenuItem.Size = new System.Drawing.Size(265, 22);
+            this.jumpForwardToolStripMenuItem.Size = new System.Drawing.Size(251, 22);
             this.jumpForwardToolStripMenuItem.Text = "Jump Forward";
             this.jumpForwardToolStripMenuItem.Click += new System.EventHandler(this.jumpForwardToolStripMenuItem_Click);
             // 
@@ -271,21 +273,21 @@
             this.clearJumpListToolStripMenuItem,
             this.toolStripSeparator7});
             this.jumpListToolStripMenuItem.Name = "jumpListToolStripMenuItem";
-            this.jumpListToolStripMenuItem.Size = new System.Drawing.Size(265, 22);
+            this.jumpListToolStripMenuItem.Size = new System.Drawing.Size(251, 22);
             this.jumpListToolStripMenuItem.Text = "Jump List";
             this.jumpListToolStripMenuItem.DropDownOpened += new System.EventHandler(this.jumpToolStripMenuItem_DropDownOpened);
             // 
             // clearJumpListToolStripMenuItem
             // 
             this.clearJumpListToolStripMenuItem.Name = "clearJumpListToolStripMenuItem";
-            this.clearJumpListToolStripMenuItem.Size = new System.Drawing.Size(154, 22);
+            this.clearJumpListToolStripMenuItem.Size = new System.Drawing.Size(146, 22);
             this.clearJumpListToolStripMenuItem.Text = "Clear Jump List";
             this.clearJumpListToolStripMenuItem.Click += new System.EventHandler(this.clearJumpListToolStripMenuItem_Click);
             // 
             // toolStripSeparator7
             // 
             this.toolStripSeparator7.Name = "toolStripSeparator7";
-            this.toolStripSeparator7.Size = new System.Drawing.Size(151, 6);
+            this.toolStripSeparator7.Size = new System.Drawing.Size(143, 6);
             // 
             // tbtnSetting
             // 
@@ -296,6 +298,16 @@
             this.tbtnSetting.Size = new System.Drawing.Size(23, 22);
             this.tbtnSetting.Text = "Settings";
             this.tbtnSetting.Click += new System.EventHandler(this.btnSettings_Click);
+            // 
+            // tbtnToggleFold
+            // 
+            this.tbtnToggleFold.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.tbtnToggleFold.Image = global::NppPIALexer2.Properties.Resources.c_namespace;
+            this.tbtnToggleFold.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.tbtnToggleFold.Name = "tbtnToggleFold";
+            this.tbtnToggleFold.Size = new System.Drawing.Size(23, 22);
+            this.tbtnToggleFold.Text = "toolStripButton1";
+            this.tbtnToggleFold.Click += new System.EventHandler(this.tbtnToggleFold_Click);
             // 
             // tvProj
             // 
@@ -334,20 +346,20 @@
             this.deleteToolStripMenuItem1});
             this.ctntFile.Name = "ctntFile";
             this.ctntFile.RenderMode = System.Windows.Forms.ToolStripRenderMode.Professional;
-            this.ctntFile.Size = new System.Drawing.Size(137, 70);
+            this.ctntFile.Size = new System.Drawing.Size(133, 70);
             // 
             // renameToolStripMenuItem3
             // 
             this.renameToolStripMenuItem3.Name = "renameToolStripMenuItem3";
             this.renameToolStripMenuItem3.ShortcutKeys = System.Windows.Forms.Keys.F2;
-            this.renameToolStripMenuItem3.Size = new System.Drawing.Size(136, 22);
+            this.renameToolStripMenuItem3.Size = new System.Drawing.Size(132, 22);
             this.renameToolStripMenuItem3.Text = "Rename";
             this.renameToolStripMenuItem3.Click += new System.EventHandler(this.Rename_Click);
             // 
             // removeToolStripMenuItem2
             // 
             this.removeToolStripMenuItem2.Name = "removeToolStripMenuItem2";
-            this.removeToolStripMenuItem2.Size = new System.Drawing.Size(136, 22);
+            this.removeToolStripMenuItem2.Size = new System.Drawing.Size(132, 22);
             this.removeToolStripMenuItem2.Text = "Remove";
             this.removeToolStripMenuItem2.Click += new System.EventHandler(this.Remove_Click);
             // 
@@ -355,7 +367,7 @@
             // 
             this.deleteToolStripMenuItem1.Name = "deleteToolStripMenuItem1";
             this.deleteToolStripMenuItem1.ShortcutKeys = System.Windows.Forms.Keys.Delete;
-            this.deleteToolStripMenuItem1.Size = new System.Drawing.Size(136, 22);
+            this.deleteToolStripMenuItem1.Size = new System.Drawing.Size(132, 22);
             this.deleteToolStripMenuItem1.Text = "Delete";
             this.deleteToolStripMenuItem1.Click += new System.EventHandler(this.Delete_Click);
             // 
@@ -372,19 +384,19 @@
             this.deleteToolStripMenuItem});
             this.ctntFolder.Name = "ctntFolder";
             this.ctntFolder.RenderMode = System.Windows.Forms.ToolStripRenderMode.Professional;
-            this.ctntFolder.Size = new System.Drawing.Size(176, 164);
+            this.ctntFolder.Size = new System.Drawing.Size(167, 164);
             // 
             // addNewItemToolStripMenuItem
             // 
             this.addNewItemToolStripMenuItem.Name = "addNewItemToolStripMenuItem";
-            this.addNewItemToolStripMenuItem.Size = new System.Drawing.Size(175, 22);
+            this.addNewItemToolStripMenuItem.Size = new System.Drawing.Size(166, 22);
             this.addNewItemToolStripMenuItem.Text = "Add New Item";
             this.addNewItemToolStripMenuItem.Click += new System.EventHandler(this.AddNewItem_Click);
             // 
             // addExistingToolStripMenuItem
             // 
             this.addExistingToolStripMenuItem.Name = "addExistingToolStripMenuItem";
-            this.addExistingToolStripMenuItem.Size = new System.Drawing.Size(175, 22);
+            this.addExistingToolStripMenuItem.Size = new System.Drawing.Size(166, 22);
             this.addExistingToolStripMenuItem.Text = "Add Existing Item";
             this.addExistingToolStripMenuItem.ToolTipText = "Copy existing items to current project.";
             this.addExistingToolStripMenuItem.Click += new System.EventHandler(this.AddExistingItem_Click);
@@ -392,34 +404,34 @@
             // addFolderToolStripMenuItem1
             // 
             this.addFolderToolStripMenuItem1.Name = "addFolderToolStripMenuItem1";
-            this.addFolderToolStripMenuItem1.Size = new System.Drawing.Size(175, 22);
+            this.addFolderToolStripMenuItem1.Size = new System.Drawing.Size(166, 22);
             this.addFolderToolStripMenuItem1.Text = "Add New Folder";
             this.addFolderToolStripMenuItem1.Click += new System.EventHandler(this.AddNewDir_Click);
             // 
             // addExistingFolderToolStripMenuItem
             // 
             this.addExistingFolderToolStripMenuItem.Name = "addExistingFolderToolStripMenuItem";
-            this.addExistingFolderToolStripMenuItem.Size = new System.Drawing.Size(175, 22);
+            this.addExistingFolderToolStripMenuItem.Size = new System.Drawing.Size(166, 22);
             this.addExistingFolderToolStripMenuItem.Text = "Add Existing Folder";
             this.addExistingFolderToolStripMenuItem.Click += new System.EventHandler(this.AddExistingFolder_Click);
             // 
             // toolStripSeparator2
             // 
             this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(172, 6);
+            this.toolStripSeparator2.Size = new System.Drawing.Size(163, 6);
             // 
             // renameToolStripMenuItem2
             // 
             this.renameToolStripMenuItem2.Name = "renameToolStripMenuItem2";
             this.renameToolStripMenuItem2.ShortcutKeys = System.Windows.Forms.Keys.F2;
-            this.renameToolStripMenuItem2.Size = new System.Drawing.Size(175, 22);
+            this.renameToolStripMenuItem2.Size = new System.Drawing.Size(166, 22);
             this.renameToolStripMenuItem2.Text = "Rename";
             this.renameToolStripMenuItem2.Click += new System.EventHandler(this.Rename_Click);
             // 
             // removeToolStripMenuItem1
             // 
             this.removeToolStripMenuItem1.Name = "removeToolStripMenuItem1";
-            this.removeToolStripMenuItem1.Size = new System.Drawing.Size(175, 22);
+            this.removeToolStripMenuItem1.Size = new System.Drawing.Size(166, 22);
             this.removeToolStripMenuItem1.Text = "Remove";
             this.removeToolStripMenuItem1.Click += new System.EventHandler(this.Remove_Click);
             // 
@@ -427,7 +439,7 @@
             // 
             this.deleteToolStripMenuItem.Name = "deleteToolStripMenuItem";
             this.deleteToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.Delete;
-            this.deleteToolStripMenuItem.Size = new System.Drawing.Size(175, 22);
+            this.deleteToolStripMenuItem.Size = new System.Drawing.Size(166, 22);
             this.deleteToolStripMenuItem.Text = "Delete";
             this.deleteToolStripMenuItem.Click += new System.EventHandler(this.Delete_Click);
             // 
@@ -549,15 +561,12 @@
             this.dlgAddExistFolder.Description = "NppPIALexer2 Add Existing Folder";
             this.dlgAddExistFolder.ShowNewFolderButton = false;
             // 
-            // tbtnToggleFold
+            // toolStripMenuItem1
             // 
-            this.tbtnToggleFold.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.tbtnToggleFold.Image = global::NppPIALexer2.Properties.Resources.c_namespace;
-            this.tbtnToggleFold.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.tbtnToggleFold.Name = "tbtnToggleFold";
-            this.tbtnToggleFold.Size = new System.Drawing.Size(23, 22);
-            this.tbtnToggleFold.Text = "toolStripButton1";
-            this.tbtnToggleFold.Click += new System.EventHandler(this.tbtnToggleFold_Click);
+            this.toolStripMenuItem1.Name = "toolStripMenuItem1";
+            this.toolStripMenuItem1.Size = new System.Drawing.Size(251, 22);
+            this.toolStripMenuItem1.Text = "Task List";
+            this.toolStripMenuItem1.Click += new System.EventHandler(this.taskListToolStripMenuItem_Click);
             // 
             // frmMain
             // 
@@ -637,5 +646,6 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator9;
         private System.Windows.Forms.ToolStripMenuItem unloadAllProjectsToolStripMenuItem;
         private System.Windows.Forms.ToolStripButton tbtnToggleFold;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem1;
     }
 }

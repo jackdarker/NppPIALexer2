@@ -184,7 +184,7 @@ namespace NppPIALexer2
                         _Cache[file] = tasks;
                     }
 
-                    // 在加载过程中卸载项目
+                    // Unload items during loading
                     if (ProjectManager.GetProjectIndex(project) == -1)
                     {
                         foreach (string f in t)
@@ -286,12 +286,12 @@ namespace NppPIALexer2
                 return ret;
 
             string[] lines = File.ReadAllLines(file);
-            if (lines.Length > 10000)   // 有这么大的源码文件
+            if(lines.Length > 10000)   // There's such a big source file.
                 return ret;
             for (int lineno = 0; lineno < lines.Length; ++lineno)
             {
                 string line = lines[lineno];
-                if (line.Length > 1000) // 有这么长的代码行吗？
+                if(line.Length > 1000) // Is there a long code line?
                     continue;
                 line = line.Trim();
                 if (string.IsNullOrEmpty(line))

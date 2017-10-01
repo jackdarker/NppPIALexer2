@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace NppPIALexer2 {
     /// <summary>
@@ -121,8 +122,10 @@ namespace NppPIALexer2 {
         public class CmdUsing : CmdBase {
             public String m_Path = "";
             public String m_Name = "";
+            Regex m_RegEx;
             public CmdUsing()
                 : base() {
+                    m_RegEx = new Regex("(\"[^\r]*:)([^\r]*)(.[^\r]*\")", RegexOptions.Singleline);
             }
             public CmdUsing(CmdUsing CopyThis)
                 : base(CopyThis) {
@@ -140,12 +143,19 @@ namespace NppPIALexer2 {
                     while (m_Subs.MoveNext()) {
                         if (m_Subs.Current.GetNodeType().Equals(typeof(Tokenizer.RuleString))) {
                             this.m_Path = m_Subs.Current.GetValue(false);
-                            this.m_Name = this.m_Path;
+                            //"UserManager.lvlibp:UserManager.lvclass"   -> Name=UserManager
+                            Match m = m_RegEx.Match(this.m_Path, 0);
+                            if(m.Success && m.Groups.Count == 4) {
+                                this.m_Name = m.Groups[2].Value;
+                            } else {
+                                this.m_Error += " invalid Path";
+                            }
                         }
-                        if (m_Subs.Current.GetNodeType().Equals(typeof(Tokenizer.RuleName))) {
-                            this.m_Name = m_Subs.Current.GetValue(false);
+                        if (m_Subs.Current.GetNodeType().Equals(typeof(Tokenizer.RuleRegex))) {  //optional Name is hidden behind "as"
+                            this.m_Name = m_Subs.Current.First.Value.GetValue(false);
                         }
                     }
+                    
                     if (this.m_Path.Equals("")) {
                         this.m_Error += " missing path";
                     }
@@ -363,8 +373,6 @@ namespace NppPIALexer2 {
                     return m_Logs;
                 }
             }
-            
-
             protected LinkedList<CmdBase> m_Evaluators = new LinkedList<CmdBase>();
 
             /// <summary>

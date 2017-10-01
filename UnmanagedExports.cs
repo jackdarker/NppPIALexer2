@@ -112,7 +112,7 @@ namespace NppPIALexer2
                             }
                             break;
 
-                        case NppMsg.NPPN_BUFFERACTIVATED:   // 高亮显示当前Active文件
+                        case NppMsg.NPPN_BUFFERACTIVATED:   // Highlight current Active file
                             {
                                 StringBuilder sb = new StringBuilder(Win32.MAX_PATH);
                                 if ((int)Win32.SendMessage(PluginBase.nppData._nppHandle, NppMsg.NPPM_GETFULLPATHFROMBUFFERID, (int)nc.nmhdr.idFrom, sb) != -1)

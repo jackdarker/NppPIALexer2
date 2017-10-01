@@ -195,5 +195,9 @@ namespace NppPIALexer2.Forms
                 }
             }
         }
+
+        private void toolStripButton2_Click(object sender, EventArgs e) {
+
+        }
     }
 }

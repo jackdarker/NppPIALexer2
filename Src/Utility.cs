@@ -35,11 +35,11 @@ namespace NppPIALexer2
             Assert(assert, "");
 #endif
         }
-
+        static Object s_DebugLock = new object();
         public static void Debug(string fmt, params object[] args)
         {
 #if DEBUG
-            lock (typeof(Utility))
+            lock(s_DebugLock)
             {
                 string str = string.Format(fmt, args);
                 str = DateTime.Now.ToString() + "|" + str + "\n";
@@ -207,7 +207,7 @@ namespace NppPIALexer2
 
         static TreeNode _LastActive;
         /// <summary>
-        /// 高亮显示一个结点
+        /// Highlight a node
         /// </summary>
         /// <param name="path"></param>
         public static void HighlightActiveTreeNode(string path)
@@ -222,6 +222,7 @@ namespace NppPIALexer2
                 node.TreeView.SelectedNode = node;
                 _LastActive = node;
             }
+            Main.getInstance().ChangeFileBuffer(path);
         }
 
         /// <summary>

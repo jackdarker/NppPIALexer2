@@ -27,13 +27,12 @@ namespace NppPIALexer2
         }
 
         /// <summary>
-        /// 获取已打开文件列表
+        /// Get list of open files
         /// </summary>
         /// <returns></returns>
         public static List<string> GetOpenedFiles()
         {
             List<string> openedFiles = new List<string>();
-            // 获取已打开文件列表
             int nbFile = (int)Win32.SendMessage(PluginBase.nppData._nppHandle, NppMsg.NPPM_GETNBOPENFILES, 0, 0);
             using (ClikeStringArray cStrArray = new ClikeStringArray(nbFile, Win32.MAX_PATH))
             {

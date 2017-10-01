@@ -1276,7 +1276,9 @@ namespace NppPIALexer2.Forms
         {
             Main.ShowNppTaskList();
         }
-
+        private void LogListToolStripMenuItem_Click(object sender, EventArgs e) {
+            Main.ShowNppLogList();
+        }
         private void tbtnGenerateProject_Click(object sender, EventArgs e)
         {
             if (dlgGeneratePeoj.ShowDialog() == DialogResult.OK)

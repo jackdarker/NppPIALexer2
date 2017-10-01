@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
-
+using NppPIALexer2.Forms;
 using System.Data.SQLite; //SQLiteNET wrapper
 
 namespace NppPIALexer2 {
@@ -312,7 +312,11 @@ namespace NppPIALexer2 {
     	}
         Parser2 _parser2 = new Parser2(this, m_ProjectDir);
         _parser2.ParseTokens(_Tokens);
-        //Todo update database with parserresult
+        LinkedList<Parser2.Context.Log>.Enumerator _l= _parser2.GetLogs().GetEnumerator();
+        while(_l.MoveNext()) {
+            Log.getInstance().Add(_l.Current.m_Text, Log.EnuSeverity.Warn, _l.Current.m_Cmd.AsText());
+        }
+        //update database with parserresult
         LinkedList<Parser2.CmdBase>.Enumerator _Cmds;
         List<String>.Enumerator _Scopes = _parser2.GetScopes().GetEnumerator();
         while(_Scopes.MoveNext()) {
@@ -326,6 +330,7 @@ namespace NppPIALexer2 {
             }
 
         }
+        Log.getInstance().Add("Parsing done ", Log.EnuSeverity.Info, "");
         
     }
     finally {	

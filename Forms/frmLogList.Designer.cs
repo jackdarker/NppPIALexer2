@@ -1,6 +1,6 @@
 ﻿namespace NppPIALexer2.Forms
 {
-    partial class frmTaskList
+    partial class frmLogList
     {
         /// <summary>
         /// Required designer variable.
@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmTaskList));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmLogList));
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.tddiProjects = new System.Windows.Forms.ToolStripDropDownButton();
             this.allProjectsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -36,8 +36,9 @@
             this.tddiTaskType = new System.Windows.Forms.ToolStripDropDownButton();
             this.allTasksToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripButton1 = new System.Windows.Forms.ToolStripButton();
-            this.lviewTaskList = new System.Windows.Forms.ListView();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+            this.lviewTaskList = new System.Windows.Forms.ListView();
+            this.toolStripButton2 = new System.Windows.Forms.ToolStripButton();
             this.toolStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -48,7 +49,8 @@
             this.toolStripSeparator1,
             this.tddiTaskType,
             this.toolStripButton1,
-            this.toolStripSeparator2});
+            this.toolStripSeparator2,
+            this.toolStripButton2});
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
             this.toolStrip1.Name = "toolStrip1";
             this.toolStrip1.RenderMode = System.Windows.Forms.ToolStripRenderMode.Professional;
@@ -70,9 +72,8 @@
             // allProjectsToolStripMenuItem
             // 
             this.allProjectsToolStripMenuItem.Name = "allProjectsToolStripMenuItem";
-            this.allProjectsToolStripMenuItem.Size = new System.Drawing.Size(127, 22);
+            this.allProjectsToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.allProjectsToolStripMenuItem.Text = "All Projects";
-            this.allProjectsToolStripMenuItem.Click += new System.EventHandler(this.item_Click);
             // 
             // toolStripSeparator1
             // 
@@ -95,7 +96,6 @@
             this.allTasksToolStripMenuItem.Name = "allTasksToolStripMenuItem";
             this.allTasksToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.allTasksToolStripMenuItem.Text = "All Tasks";
-            this.allTasksToolStripMenuItem.Click += new System.EventHandler(this.taskType_Click);
             // 
             // toolStripButton1
             // 
@@ -105,7 +105,11 @@
             this.toolStripButton1.Name = "toolStripButton1";
             this.toolStripButton1.Size = new System.Drawing.Size(23, 22);
             this.toolStripButton1.Text = "Customize Task Definition";
-            this.toolStripButton1.Click += new System.EventHandler(this.toolStripButton1_Click);
+            // 
+            // toolStripSeparator2
+            // 
+            this.toolStripSeparator2.Name = "toolStripSeparator2";
+            this.toolStripSeparator2.Size = new System.Drawing.Size(6, 25);
             // 
             // lviewTaskList
             // 
@@ -118,23 +122,26 @@
             this.lviewTaskList.TabIndex = 1;
             this.lviewTaskList.UseCompatibleStateImageBehavior = false;
             this.lviewTaskList.View = System.Windows.Forms.View.Details;
-            this.lviewTaskList.DoubleClick += new System.EventHandler(this.lviewTaskList_DoubleClick);
-            this.lviewTaskList.KeyDown += new System.Windows.Forms.KeyEventHandler(this.lviewTaskList_KeyDown);
             // 
-            // toolStripSeparator2
+            // toolStripButton2
             // 
-            this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(6, 25);
+            this.toolStripButton2.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripButton2.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButton2.Image")));
+            this.toolStripButton2.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButton2.Name = "toolStripButton2";
+            this.toolStripButton2.Size = new System.Drawing.Size(23, 22);
+            this.toolStripButton2.Text = "toolStripButton2";
+            this.toolStripButton2.Click += new System.EventHandler(this.toolStripButton2_Click);
             // 
-            // frmTaskList
+            // frmLogList
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(524, 225);
             this.Controls.Add(this.lviewTaskList);
             this.Controls.Add(this.toolStrip1);
-            this.Name = "frmTaskList";
-            this.Text = "frmTaskList";
+            this.Name = "frmLogList";
+            this.Text = "frmLogList";
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();
             this.ResumeLayout(false);
@@ -153,5 +160,6 @@
         private System.Windows.Forms.ToolStripMenuItem allTasksToolStripMenuItem;
         private System.Windows.Forms.ToolStripButton toolStripButton1;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
+        private System.Windows.Forms.ToolStripButton toolStripButton2;
     }
 }

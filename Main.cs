@@ -29,6 +29,7 @@ namespace NppPIALexer2
         internal static frmTagList FrmTagList = null;
         internal static frmFileSwitcher FrmFileSwitcher = null;
         internal static frmTaskList FrmTaskList = null;
+        internal static frmLogList FrmLogList = null;
         internal static frmTaskDefinition FrmTaskDefinition = null;
 
         internal static int IdFrmMain = -1;
@@ -41,7 +42,14 @@ namespace NppPIALexer2
         #endregion
 
         #region "StartUp/CleanUp "
-
+        private Main() { }
+        private static Main s_Instance;
+        public static Main getInstance() {
+            if(s_Instance == null) {
+                s_Instance = new Main();
+            }
+            return s_Instance;
+        }
         internal static void CommandMenuInit()
         {
             // 设置菜单命令
@@ -52,7 +60,8 @@ namespace NppPIALexer2
             PluginBase.SetCommand(++index, "", null);
             PluginBase.SetCommand(++index, "Class View", ShowNppTagList, new ShortcutKey(true, false, true, Keys.T));
             //PluginBase.SetCommand(++index, "Bookmark", ShowNppBookmark, new ShortcutKey(true, false, true, Keys.B));
-            PluginBase.SetCommand(++index, "Task List", ShowNppTaskList, new ShortcutKey(true, false, true, Keys.B));
+            PluginBase.SetCommand(++index, "Task List", ShowNppTaskList);
+            PluginBase.SetCommand(++index, "Log List", ShowNppLogList, new ShortcutKey(true, false, true, Keys.B));
             PluginBase.SetCommand(++index, "File Switcher", ShowFileSwitcher, new ShortcutKey(true, false, true, Keys.F));
             PluginBase.SetCommand(++index, "", null);
             PluginBase.SetCommand(++index, "Auto Completion", ShowAutoCompletion, new ShortcutKey(true, false, false, Keys.J));
@@ -73,11 +82,18 @@ namespace NppPIALexer2
             Win32.SendMessage(PluginBase.nppData._nppHandle, NppMsg.NPPM_ADDTOOLBARICON, PluginBase._funcItems.Items[IdFrmMain]._cmdID, pTbIcons);
             Marshal.FreeHGlobal(pTbIcons);
         }
+        public event FileBufferChanged EvtFileBufferChanged;
+        public delegate void FileBufferChanged(String filepath);
+        public void ChangeFileBuffer(String File) {
+            if(EvtFileBufferChanged != null) EvtFileBufferChanged(File);
+        }
 
         internal static void InitNppPIALexer2()
         {
-            if (Config.Instance.Visible)
+            if(Config.Instance.Visible) {
                 ShowNppPIALexer2View();
+                ShowNppLogList();
+            }
 
             // NppPIALexer2 All the components are started after the NppPIALexer2 window opens
             // so the associated initialization operation is placed in the ShowNppPIALexer2View () function
@@ -281,7 +297,7 @@ namespace NppPIALexer2
         //}
 
         /// <summary>
-        /// 显示/隐藏 任务列表
+        /// Show/Hide Task List
         /// </summary>
         internal static void ShowNppTaskList()
         {
@@ -308,6 +324,30 @@ namespace NppPIALexer2
                     Win32.SendMessage(PluginBase.nppData._nppHandle, NppMsg.NPPM_DMMHIDE, 0, FrmTaskList.Handle);
                 else
                     Win32.SendMessage(PluginBase.nppData._nppHandle, NppMsg.NPPM_DMMSHOW, 0, FrmTaskList.Handle);
+            }
+        }
+        internal static void ShowNppLogList() {
+            if(FrmMain == null)
+                ShowNppPIALexer2View();
+
+            if(FrmLogList == null) {
+                FrmLogList = new frmLogList();
+
+                NppTbData _nppTbData = new NppTbData();
+                _nppTbData.hClient = FrmLogList.Handle;
+                _nppTbData.pszName = "NppPIALexer2 LogList";
+                _nppTbData.uMask = NppTbMsg.DWS_DF_CONT_BOTTOM;// | NppTbMsg.DWS_ICONTAB;// | NppTbMsg.DWS_ICONBAR;
+                _nppTbData.pszModuleName = "NppPIALexer2 LogList";
+                IntPtr _ptrNppTbData = Marshal.AllocHGlobal(Marshal.SizeOf(_nppTbData));
+                Marshal.StructureToPtr(_nppTbData, _ptrNppTbData, false);
+
+                Win32.SendMessage(PluginBase.nppData._nppHandle, NppMsg.NPPM_DMMREGASDCKDLG, 0, _ptrNppTbData);
+
+            } else {
+                if(FrmLogList.Visible)
+                    Win32.SendMessage(PluginBase.nppData._nppHandle, NppMsg.NPPM_DMMHIDE, 0, FrmLogList.Handle);
+                else
+                    Win32.SendMessage(PluginBase.nppData._nppHandle, NppMsg.NPPM_DMMSHOW, 0, FrmLogList.Handle);
             }
         }
 
