@@ -93,6 +93,7 @@ namespace NppPIALexer2
             if(Config.Instance.Visible) {
                 ShowNppPIALexer2View();
                 ShowNppLogList();
+                ShowNppTagList();
             }
 
             // NppPIALexer2 All the components are started after the NppPIALexer2 window opens

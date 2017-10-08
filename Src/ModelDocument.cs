@@ -42,13 +42,16 @@ namespace NppPIALexer2 {
 		tCTClass=(4)	// its a class/commander
 	};	    
 	
-	public ObjDecl(String classID, TClassType type,String function,String parameter,String returns, String Descr) {
+	public ObjDecl(String classID, TClassType type,String function,String parameter,
+        String returns, String Descr, int StartPos, int Length) {
 		m_ID=0;
 		m_ClassID=classID;
 		m_ClassType=type;
 		m_Params=parameter;
 		m_Returns=returns;
 		m_Function=function;
+        m_StartPos = StartPos;
+        m_Length = Length;
 		m_Descr = Descr.Substring(0, Math.Min(Descr.Length,1000)); //limit size because DB cannot handle big strings
 	}
 	public long ID() {return m_ID;}
@@ -59,6 +62,16 @@ namespace NppPIALexer2 {
 	public String ClassID(){return m_ClassID;}
 	public TClassType ClassType() {return m_ClassType;}
 	public String Description(){return m_Descr;}
+    /// <summary>
+    /// the position of the declaration
+    /// </summary>
+    /// <returns></returns>
+    public int StartPos() { return m_StartPos; }
+    /// <summary>
+    /// the length of the declaration
+    /// </summary>
+    /// <returns></returns>
+    public int Length() { return m_Length; }
 	private	long m_ID;
 	private	TClassType m_ClassType;
 	private	String m_Function;
@@ -66,6 +79,8 @@ namespace NppPIALexer2 {
 	private	String m_Returns;
 	private	String m_ClassID;
 	private	String m_Descr;
+    private int m_StartPos;
+    private int m_Length;
 
 }
     public class ModelDocument : IDisposable {
@@ -101,11 +116,19 @@ namespace NppPIALexer2 {
         }
         return "\\App\\plugins"; //pointing to compiled plugins
     }
-    public String getSeqDir() {
+    public String getSeqDir(string SubProj) {
         if (SEQ_VERSION == 1) {
             return "PRG\\SEQ";
         }
-        return "Projects\\ZBF\\Sequences"; //Todo: we need project selector !
+        return "Projects\\" + SubProj + "\\Sequences"; //Todo: we need project selector !
+    }
+    public String[] getSubProj() {
+        DirectoryInfo[] _Dirs = new DirectoryInfo(Path.Combine(m_ProjectDir, "Projects")).GetDirectories();
+        String[] _Ret = new String[_Dirs.Length];
+        for (int i = 0; i < _Dirs.Length; i++) {
+            _Ret[i] = _Dirs[i].Name;
+        }
+        return _Ret;
     }
 
     public ModelDocument(String ProjectPath) {
@@ -173,7 +196,8 @@ namespace NppPIALexer2 {
                           " Scope TEXT, Object TEXT, ClassID TEXT NOT NULL, State INT,Descr TEXT)");
                 ExecuteSimpleQuery("CREATE TABLE ObjectDecl (" +
                           " ID INTEGER PRIMARY KEY AUTOINCREMENT, ClassID TEXT NOT NULL," +
-                          " Function TEXT NOT NULL, Params TEXT, Returns TEXT, ClassType INT, State INT, Time INT, Descr TEXT)");
+                          " Function TEXT NOT NULL, Params TEXT, Returns TEXT, ClassType INT, State INT,"+
+                          " Time INT, Descr TEXT,Start INT, Length INT)");
                 ExecuteSimpleQuery("CREATE TABLE ObjectLinks (" +
                           " ID INTEGER PRIMARY KEY AUTOINCREMENT, ID_ObjectList INT," +
                           " ID_ObjectDecl INT, ID_ObjectListRel INT)");
@@ -284,81 +308,99 @@ namespace NppPIALexer2 {
     // add the basic types to Intelisense
     ObjDecl _A; 
     for (int i=0 ; i<BASIC_TYPES.Count;i++ ) {
-    	_A= new ObjDecl(BASIC_TYPES[i],ObjDecl.TClassType.tCTType,"","","","");
+    	_A= new ObjDecl(BASIC_TYPES[i],ObjDecl.TClassType.tCTType,"","","","",0,0);
     	UpdateObjDecl(_A);
     }
 
-   // Parser _parser = new Parser(this, m_ProjectDir);
     Tokenizer _tokenizer = new Tokenizer();
     LinkedList<Tokenizer.Token> _Tokens = new LinkedList<Tokenizer.Token>(); 
     List<String> Dirs = new List<String>() ;  //stack of directories relative to _path
     int k=0;
     try {
-    	Dirs.Add( Path.Combine(m_ProjectDir,getSeqDir()));
-    	while (k< Dirs.Count) {
+        String[] _SubProj = getSubProj();
+        for (int i = 0; i < _SubProj.Length; i++) {
+            Dirs.Add(Path.Combine(m_ProjectDir, getSeqDir(_SubProj[i])));
+        }
+            
+        while (k < Dirs.Count) {
             FileInfo[] _files = new DirectoryInfo(Dirs[k]).GetFiles();
-            for (int i = 0; i < _files.Length; i++ ) {
-                if (_files[i].Extension.Equals(".seq",StringComparison.OrdinalIgnoreCase)) {
+            for (int i = 0; i < _files.Length; i++) {
+                if (_files[i].Extension.Equals(".seq", StringComparison.OrdinalIgnoreCase)) {
                     //??_parser.AnalyseFile(_files[i].FullName);
                     _Tokens.AddLast(_tokenizer.TokenizeFile(_files[i].FullName));
                 }
             }
             DirectoryInfo[] _Dirs = new DirectoryInfo(Dirs[k]).GetDirectories();
-            for (int i = 0; i < _Dirs.Length; i++ ) {
+            for (int i = 0; i < _Dirs.Length; i++) {
                 // If the file is a directory (or is in some way invalid) we'll skip it
-                    Dirs.Add(_Dirs[i].FullName);
+                Dirs.Insert(k+1,_Dirs[i].FullName);
             }
             k++;
-    	}
+        }
         Parser2 _parser2 = new Parser2(this, m_ProjectDir);
         _parser2.ParseTokens(_Tokens);
-        LinkedList<Parser2.Context.Log>.Enumerator _l= _parser2.GetLogs().GetEnumerator();
-        while(_l.MoveNext()) {
+        LinkedList<Parser2.Context.Log>.Enumerator _l = _parser2.GetLogs().GetEnumerator();
+        while (_l.MoveNext()) {
             Log.getInstance().Add(_l.Current.m_Text, Log.EnuSeverity.Warn, _l.Current.m_Cmd.AsText());
         }
         //update database with parserresult
         LinkedList<Parser2.CmdBase>.Enumerator _Cmds;
         List<String>.Enumerator _Scopes = _parser2.GetScopes().GetEnumerator();
-        while(_Scopes.MoveNext()) {
-           // if(!m_IsClassDef) {//each SEQ includes itself
+        while (_Scopes.MoveNext()) {
+            // if(!m_IsClassDef) {//each SEQ includes itself
             {
                 this.UpdateObjList(new Obj(_Scopes.Current, "", _Scopes.Current, ""));
             }
-            _Cmds=_parser2.GetCmds(_Scopes.Current).GetEnumerator();
-            while(_Cmds.MoveNext()) {
+            _Cmds = _parser2.GetCmds(_Scopes.Current).GetEnumerator();
+            while (_Cmds.MoveNext()) {
                 PublishCmdToDB(_Scopes.Current, _Cmds.Current);
             }
 
         }
         Log.getInstance().Add("Parsing done ", Log.EnuSeverity.Info, "");
-        
+
+    } catch (Exception ex) {
+        Log.getInstance().Add("Exception",Log.EnuSeverity.Error,"" );
     }
     finally {	
     }
     	       	
     }
+    private String m_LastScope = "";
+    private Parser2.CmdComment m_LastCmd;
+
     void PublishCmdToDB (String Scope, Parser2.CmdBase Cmd ) {
-        if(Cmd.GetType().Equals(typeof(Parser2.CmdDecl))) {
+        if (Scope != m_LastScope) {
+            m_LastCmd = null;
+        }
+        if (Cmd.GetType().Equals(typeof(Parser2.CmdComment))) {
+            Parser2.CmdComment Cmd2 = (Parser2.CmdComment)Cmd;
+            m_LastCmd = Cmd2;
+        } else if(Cmd.GetType().Equals(typeof(Parser2.CmdDecl))) {
             Parser2.CmdDecl Cmd2 = (Parser2.CmdDecl)Cmd;
-            Obj _obj = new Obj(Scope, Cmd2.m_Name, Cmd2.m_Type, "m_Comment");
+            Obj _obj = new Obj(Scope, Cmd2.m_Name, Cmd2.m_Type, Cmd2.Description());
             UpdateObjList(_obj);
         } else if(Cmd.GetType().Equals(typeof(Parser2.CmdInclude))) {
             Parser2.CmdInclude Cmd2 = (Parser2.CmdInclude)Cmd; 
             Obj _obj = new Obj(Scope, Cmd2.m_Path,
-                 m_ProjectDir + getSeqDir() + "\\" + Cmd2.m_Path, "m_Comment");	//Todo das ist falsch bei Subproject-Includes
+                 m_ProjectDir + getSeqDir(getSubProj()[0]/*??*/) + "\\" + Cmd2.m_Path, Cmd2.Description());	//Todo das ist falsch bei Subproject-Includes
             UpdateObjList(_obj);
         } else if(Cmd.GetType().Equals(typeof(Parser2.CmdUsing))) {
             Parser2.CmdUsing Cmd2 = (Parser2.CmdUsing)Cmd;
             Obj _obj = new Obj(Scope, Cmd2.m_Name,
-                        m_ProjectDir + getSourceDir() + "\\" + Cmd2.m_Path, "m_Comment");
+                        m_ProjectDir + getSourceDir() + "\\" + Cmd2.m_Path, Cmd2.Description());
             UpdateObjList(_obj);
         } else if(Cmd.GetType().Equals(typeof(Parser2.CmdFunctionDecl))) {
             Parser2.CmdFunctionDecl Cmd2 = (Parser2.CmdFunctionDecl)Cmd;
             ObjDecl _objDecl = new ObjDecl(Scope,
                            /* m_IsClassDef*/false ? ObjDecl.TClassType.tCTFunc : ObjDecl.TClassType.tCTSeq,
-                                Cmd2.m_Name, Cmd2.m_Params.ToString(), Cmd2.m_Returns.ToString(), "m_Comment");
+                                Cmd2.m_Name, Cmd2.m_Params.ToString(), Cmd2.m_Returns.ToString(), 
+                                (m_LastCmd!=null ? m_LastCmd.AsText():Cmd2.Description()),
+                                Cmd2.StartPos(),Cmd2.Length());
             UpdateObjDecl(_objDecl);
+            m_LastCmd = null;
         }
+        m_LastScope = Scope;
     }
     //after building ObjList we now have to compile each class into ObjDecl
     void RebuildClassDefinition() {
@@ -520,13 +562,15 @@ namespace NppPIALexer2 {
                 " ,State=1" +
                 " ,Descr='" + theObj.Description() +
                 " ',Time=" + (Now.ToBinary().ToString()) +
+                " ,Start=" + theObj.StartPos() +
+                " ,Length=" + theObj.Length() +
                 " where ID=" + (theObj.ID().ToString());
         } else {
-            _SQL = "INSERT INTO ObjectDecl (ClassID, Function, Params, Returns, ClassType, State, Time,Descr) VALUES('" +
+            _SQL = "INSERT INTO ObjectDecl (ClassID, Function, Params, Returns, ClassType, State, Time,Descr,Start,Length) VALUES('" +
             theObj.ClassID() +
                 "', '" + theObj.Function() + "', '" + theObj.Params() +
                 "', '" + theObj.Returns() + "', " + ((int)theObj.ClassType()).ToString() +
-                ",1" + "," + (Now.ToBinary().ToString()) + ",'" + theObj.Description() + "');";
+                ",1" + "," + (Now.ToBinary().ToString()) + ",'" + theObj.Description() + "'," + theObj.StartPos() + "," + theObj.Length() + ");";
         }
 
         ExecuteSimpleQuery(_SQL);
@@ -668,7 +712,7 @@ namespace NppPIALexer2 {
         String _SQL2 = " from ObjectLinks inner join ObjectList as tab1 on tab1.ID==ObjectLinks.ID_ObjectList" +
              " inner join ObjectList as tab2 on tab2.ID==ObjectLinks.ID_ObjectListRel " +
              " inner join ObjectDecl on ObjectDecl.ID==ObjectLinks.ID_ObjectDecl ";
-        String _SQL = "SELECT distinct tab1.ClassID,Function,Params,Returns,ClassType "; //Todo da kommen doppelte Einträge bei Funktionen aus Subsequencen
+        String _SQL = "SELECT distinct tab1.ClassID,Function,Params,Returns,ClassType,Start,Length "; //Todo da kommen doppelte Einträge bei Funktionen aus Subsequencen
         _SQL += _SQL2;
         _SQL += " where tab1.Scope Like('" + Scope + "') AND ObjectDecl.ClassType==" +
                 ((int)ObjDecl.TClassType.tCTSeq).ToString();
@@ -680,7 +724,9 @@ namespace NppPIALexer2 {
                         (ObjDecl.TClassType)reader.GetInt32(reader.GetOrdinal("ClassType")),
                         reader.GetString(reader.GetOrdinal("Function")),
                         reader.GetString(reader.GetOrdinal("Params")),
-                        reader.GetString(reader.GetOrdinal("Returns")), ""));
+                        reader.GetString(reader.GetOrdinal("Returns")), "",
+                        reader.GetInt32(reader.GetOrdinal("Start")),
+                        reader.GetInt32(reader.GetOrdinal("Length"))));
             }
             reader.Dispose();
             command.Dispose();
@@ -753,32 +799,32 @@ namespace NppPIALexer2 {
         String _ClassType;
         if (Object.Equals("")) {
             // because output needs to be sorted, the UNION needs to be wrapped in additional SELECT for ordering
-            _SQL = "select Col1,_ClassTyp,ClassID,Descr,Params,Returns From ( ";
+            _SQL = "select Col1,_ClassTyp,ClassID,Descr,Params,Returns,Start,Length From ( ";
             //is it a class-object
             //because left join ObjectDecl ClassType might be null if no Class-SEQ was imported
             _ClassType = ((int)ObjDecl.TClassType.tCTClass).ToString();
             _SQL += "SELECT distinct tab2.Object as Col1," + _ClassType +
-                    " as _ClassTyp, tab2.ClassID,tab1.Descr, '' as Params, '' as Returns " + _SQL2 + "where tab1.Scope=='";
+                    " as _ClassTyp, tab2.ClassID,tab1.Descr, '' as Params, '' as Returns , '0' as Start, '0' as Length " + _SQL2 + "where tab1.Scope=='";
             _SQL += Scope + "'" + " AND (ClassType isnull OR ClassType==" + ((int)ObjDecl.TClassType.tCTFunc).ToString() + ")" +  //??
                     " AND tab2.Object Like('" + BeginsWith + "%') ";
             _SQL = _SQL + " UNION ";
             //is it a SEQ-function
             _ClassType = ((int)ObjDecl.TClassType.tCTSeq).ToString();
             _SQL = _SQL + "SELECT distinct Function as Col1," + _ClassType +
-                    " as _ClassTyp, tab2.ClassID,ObjectDecl.Descr, ObjectDecl.Params, ObjectDecl.Returns " + _SQL2 + "where tab1.Scope=='";
+                    " as _ClassTyp, tab2.ClassID,ObjectDecl.Descr, ObjectDecl.Params, ObjectDecl.Returns, ObjectDecl.Start, ObjectDecl.Length " + _SQL2 + "where tab1.Scope=='";
             _SQL = _SQL + Scope + "' AND ClassType==" + _ClassType +
                     " AND Function Like('" + BeginsWith + "%')";
             _SQL = _SQL + " UNION ";
             //is it a variable of basic type
             _ClassType = ((int)ObjDecl.TClassType.tCTType).ToString();
             _SQL = _SQL + "SELECT distinct tab2.Object as Col1," + _ClassType +
-                    " as _ClassTyp, tab2.ClassID ,tab2.Descr, '' as Params, '' as Returns " + _SQL2 + "where tab1.Scope=='";
+                    " as _ClassTyp, tab2.ClassID ,tab2.Descr, '' as Params, '' as Returns, '0' as Start, '0' as Length " + _SQL2 + "where tab1.Scope=='";
             _SQL = _SQL + Scope + "' AND ClassType==" + _ClassType + " AND tab2.Object Like('" + BeginsWith + "%')";
             _SQL = _SQL + ") order by Col1; ";
 
         } else { // its a function of an object
             _ClassType = ((int)ObjDecl.TClassType.tCTFunc).ToString();
-            _SQL = "SELECT distinct Function as Col1,ObjectDecl.ClassID,ObjectDecl.Descr, ObjectDecl.Params, ObjectDecl.Returns, " +
+            _SQL = "SELECT distinct Function as Col1,ObjectDecl.ClassID,ObjectDecl.Descr, ObjectDecl.Params, ObjectDecl.Returns, ObjectDecl.Start, ObjectDecl.Length,  " +
             _ClassType + " as _ClassTyp" + _SQL2 + "where tab1.Scope=='";
             _SQL += Scope + "' AND tab2.Object=='" + Object + "' AND Function Like('" + BeginsWith + "%')" + " order by Function;";
 
@@ -791,7 +837,9 @@ namespace NppPIALexer2 {
                         (ObjDecl.TClassType)(reader.GetInt32(reader.GetOrdinal("_ClassTyp"))),
                         reader.GetString(reader.GetOrdinal("Col1")),
                         reader.GetString(reader.GetOrdinal("Params")), reader.GetString(reader.GetOrdinal("Returns")),
-                        reader.GetString(reader.GetOrdinal("Descr"))));
+                        reader.GetString(reader.GetOrdinal("Descr")),
+                        reader.GetInt32(reader.GetOrdinal("Start")),
+                        reader.GetInt32(reader.GetOrdinal("Length"))));
             }
             reader.Dispose();
             command.Dispose();

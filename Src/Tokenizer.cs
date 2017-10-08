@@ -86,13 +86,13 @@ namespace NppPIALexer2 {
             }
             public System.Type GetNodeType() {
                 if (m_ThisNode == null)
-                    return null; //??
+                    return this.GetType(); //??
                 return m_ThisNode;
 
             }
             public System.Type GetTopNodeType() {
                 if (m_TopNode == null)
-                    return null;
+                    return this.GetType();
                 return m_TopNode;
 
             }

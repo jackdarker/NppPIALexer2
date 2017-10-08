@@ -26,6 +26,7 @@ namespace NppPIALexer2 {
             m_Evaluators.AddLast(new CmdFunctionDecl());
             m_Evaluators.AddLast(new CmdUsing());
             m_Evaluators.AddLast(new CmdInclude());
+            m_Evaluators.AddLast(new CmdComment());
             m_Evaluators.AddLast(new CmdInvalid());
         }
         //////////////////////////////////////////////////
@@ -40,6 +41,8 @@ namespace NppPIALexer2 {
 #region Cmds
         abstract public class CmdBase {
             protected int m_StartPos;
+            protected int m_Length;
+            public String m_Descr="";
             public String m_Error="";
             abstract public Boolean TryParse(Parser2.Context Context, Tokenizer.Token Token);
             abstract public String AsText();
@@ -47,11 +50,16 @@ namespace NppPIALexer2 {
             public CmdBase() { }
             public CmdBase(CmdBase CopyThis) {
                 m_StartPos = CopyThis.m_StartPos;
+                m_Length = CopyThis.m_Length;
+                m_Descr = CopyThis.m_Descr;
                 m_Error = CopyThis.m_Error;
             }
             public bool HasError() {
                 return !m_Error.Equals("");
             }
+            public int StartPos() { return m_StartPos; }
+            public int Length() { return m_Length; }
+            public String Description() { return m_Descr; }
         }
         public class CmdInvalid : CmdBase {
             public CmdInvalid(): base() {
@@ -96,17 +104,20 @@ namespace NppPIALexer2 {
                 m_Error = "";
                 Boolean _Ret = true;
                 if (Token.GetTopNodeType().Equals(typeof(Tokenizer.RuleInclude))) {
+                    this.m_StartPos = Token.GetPosStart();
+                    this.m_Length = Token.GetPosEnd() - Token.GetPosStart();
                     LinkedList<Tokenizer.Token>.Enumerator m_Subs = Token.GetEnumerator();
                     while (m_Subs.MoveNext()) {
                         if (m_Subs.Current.GetNodeType().Equals(typeof(Tokenizer.RuleString))) {
                             this.m_Path = m_Subs.Current.GetValue(false);
                             break;
                         }
+                        this.m_Length = m_Subs.Current.GetPosEnd() - Token.GetPosStart();
                     }
                     if (this.m_Path.Equals("\"\"")) {
                         Context.AddLog(1, " missing path", this);
                     }
-                    this.m_StartPos = Token.GetPosStart();
+                    
                     return _Ret;
                 } else {
                     return false;
@@ -114,6 +125,37 @@ namespace NppPIALexer2 {
             }
             override public String AsText() {
                 return "Include of " + m_Path;
+            }
+        }
+        /// <summary>
+        /// using declaration
+        /// </summary>
+        public class CmdComment : CmdBase {
+            public String m_Comment = "";
+            public CmdComment()
+                : base() {
+            }
+            public CmdComment(CmdComment CopyThis)
+                : base(CopyThis) {
+                    m_Comment = CopyThis.m_Comment;
+            }
+            public override CmdBase Copy() {
+                return new CmdComment(this);
+            }
+            override public Boolean TryParse(Context Context, Tokenizer.Token Token) {
+                m_Error = "";
+                Boolean _Ret = true;
+                if (Token.GetTopNodeType().Equals(typeof(Tokenizer.RuleComment))) {
+                    this.m_StartPos = Token.GetPosStart();
+                    this.m_Length = Token.GetPosEnd() - Token.GetPosStart();
+                    m_Comment = Token.GetValue(false);
+                    return _Ret;
+                } else {
+                    return false;
+                }
+            }
+            override public String AsText() {
+                return m_Comment;
             }
         }
         /// <summary>
@@ -140,6 +182,8 @@ namespace NppPIALexer2 {
                 Boolean _Ret = true;
                 if (Token.GetTopNodeType().Equals(typeof(Tokenizer.RuleUsing))) {
                     LinkedList<Tokenizer.Token>.Enumerator m_Subs = Token.GetEnumerator();
+                    this.m_StartPos = Token.GetPosStart();
+                    this.m_Length = Token.GetPosEnd() - Token.GetPosStart();
                     while (m_Subs.MoveNext()) {
                         if (m_Subs.Current.GetNodeType().Equals(typeof(Tokenizer.RuleString))) {
                             this.m_Path = m_Subs.Current.GetValue(false);
@@ -154,12 +198,13 @@ namespace NppPIALexer2 {
                         if (m_Subs.Current.GetNodeType().Equals(typeof(Tokenizer.RuleRegex))) {  //optional Name is hidden behind "as"
                             this.m_Name = m_Subs.Current.First.Value.GetValue(false);
                         }
+                        this.m_Length = m_Subs.Current.GetPosEnd() - Token.GetPosStart();
                     }
                     
                     if (this.m_Path.Equals("")) {
                         this.m_Error += " missing path";
                     }
-                    this.m_StartPos = Token.GetPosStart();
+                    
                     return _Ret;
                 } else {
                     return false;
@@ -192,6 +237,8 @@ namespace NppPIALexer2 {
                     Context.m_ActualCmd.Equals(typeof(Tokenizer.RuleDecl)) ||
                     Token.GetTopNodeType().Equals(typeof(Tokenizer.RuleRetDecl))) {
                     this.m_Type = Token.GetValue(false);
+                    this.m_StartPos = Token.GetPosStart();
+                    this.m_Length = Token.GetPosEnd() - Token.GetPosStart();
                     if (this.m_Type.Equals("int") || this.m_Type.Equals("bool") ||
                         this.m_Type.Equals("double") || this.m_Type.Equals("string") ||
                         this.m_Type.Equals("variant")) {
@@ -205,12 +252,13 @@ namespace NppPIALexer2 {
                             this.m_Name = m_Subs.Current.GetValue(false);
                             break;
                         }
+                        this.m_Length = m_Subs.Current.GetPosEnd() - Token.GetPosStart();
                     }
                     if (this.m_Name.Equals("") && !Token.GetTopNodeType().Equals(typeof(Tokenizer.RuleRetDecl))) {
                         this.m_Error += " missing name";
                     }
                     //Todo missing name
-                    this.m_StartPos = Token.GetPosStart();
+                    
                     return _Ret;
                 } else {
                     return false;
@@ -241,7 +289,9 @@ namespace NppPIALexer2 {
                 m_Error = "";
                 Boolean _Ret = true;
                 if (Context.m_ActualCmd.Equals(typeof(Tokenizer.RuleFunctionDecl))) {
-                    LinkedList<Tokenizer.Token>.Enumerator m_Subs = Token.GetEnumerator();               
+                    LinkedList<Tokenizer.Token>.Enumerator m_Subs = Token.GetEnumerator();
+                    this.m_StartPos = Token.GetPosStart();
+                    this.m_Length = Token.GetPosEnd() - Token.GetPosStart();
                     while (m_Subs.MoveNext()) {
                         if (m_Subs.Current.GetNodeType().Equals(typeof(Tokenizer.RuleName))) {
                             this.m_Name = m_Subs.Current.GetValue(false);
@@ -252,9 +302,10 @@ namespace NppPIALexer2 {
                         if (m_Subs.Current.GetTopNodeType().Equals(typeof(Tokenizer.RuleRetDecl))) {
                             this.m_Returns = ParseReturns(Context, m_Subs.Current, null);  //this is the first node in the params fe. string from (string sText,int Wolf))
                         }
+                        this.m_Length = m_Subs.Current.GetPosEnd() - Token.GetPosStart();
                     }
                     //Todo missing name
-                    this.m_StartPos = Token.GetPosStart();
+                  
                     return _Ret;
                 } else {
                     return false;

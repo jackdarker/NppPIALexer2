@@ -53,7 +53,7 @@
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Data.SQLite">
-      <HintPath>..\..\..\Program Files (x86)\System.Data.SQLite\2010\bin\System.Data.SQLite.dll</HintPath>
+      <HintPath>..\..\..\Tools\Notepad++\System.Data.SQLite.dll</HintPath>
     </Reference>
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
@@ -128,7 +128,6 @@
     <Compile Include="Src\Jump.cs" />
     <Compile Include="Src\ModelDocument.cs" />
     <Compile Include="Src\NPP.cs" />
-    <Compile Include="Src\Parser.cs" />
     <Compile Include="Src\Parser2.cs" />
     <Compile Include="Src\ParserNode.cs" />
     <Compile Include="Src\Project.cs" />

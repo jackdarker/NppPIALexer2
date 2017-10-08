@@ -5,9 +5,11 @@ using System.Data;
 using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
-using NppPIALexer2.Tag;
 using System.IO;
 using System.Threading;
+using NppPIALexer2.Tag;
+using NppPIALexer2;
+
 
 namespace NppPIALexer2.Forms
 {
@@ -132,7 +134,9 @@ namespace NppPIALexer2.Forms
             this.Invoke(_DGupdateView, new Object[] { File });
         }
 
+        private String m_CurrFile = "";
         void _UpdateView(String File) {
+            m_CurrFile = File;
             TreeNode root = tvClassView.Nodes[0]; //TODO
             _InsertTags(root, TagCache.GetTags(File));
         }
@@ -201,6 +205,8 @@ namespace NppPIALexer2.Forms
         void _InsertTags(TreeNode root, List<ITag> tags) {
             string _Scope = NPP.GetCurrentFile();
             Project proj=ProjectManager.GetProjectByItsFile(_Scope);
+            if (proj == null)
+                return;
             ModelDocument _Model = proj.Model;
             _Scope = _Model.GetRelativePath(_Scope);
             List<Obj>.Enumerator _Objs =_Model.GetObjects(_Scope).GetEnumerator();
@@ -440,15 +446,21 @@ namespace NppPIALexer2.Forms
         {
             if (tvClassView.SelectedNode == null)
                 return;
-            ITag tag = tvClassView.SelectedNode.Tag as ITag;
+            ObjDecl tag = tvClassView.SelectedNode.Tag as ObjDecl;
             if (tag == null)
                 return;
-            if (File.Exists(tag.SourceFile))
+            String _path = Path.Combine(ProjectManager.GetProjectByItsFile(m_CurrFile).BaseDir, tag.ClassID());
+            if (File.Exists(_path)) {
+                Jump.Add(tag.Function(), _path, tag.StartPos());
+                Jump.Cursor.Go();
+                //NPP.GoToDefinition(tag.SourceFile, tag.LineNo - 1, tag.TagName);
+            }
+            /*if (File.Exists(tag.SourceFile))
             {
                 Jump.Add(tag.TagName, tag.SourceFile, tag.LineNo - 1);
                 Jump.Cursor.Go();
                 //NPP.GoToDefinition(tag.SourceFile, tag.LineNo - 1, tag.TagName);
-            }
+            }*/
         }
 
         void _ResetSearch()

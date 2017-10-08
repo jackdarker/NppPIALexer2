@@ -40,8 +40,28 @@ namespace NppPIALexer2
 
         static List<Jump> _JumpList = new List<Jump>();
         static int _Cursor = -1;
+        public static void Add(string info, string file, int pos) {
+            if (!System.IO.File.Exists(file))
+                return;
 
-        public static void Add(string info, string file, int lineNo)
+            Jump oldPos = new Jump(NPP.GetCurrentWord2(), NPP.GetCurrentFile(), NPP.GetCurrentLine(), NPP.GetCurrentPosition());
+            if (oldPos.Info == "")
+                oldPos.Info = string.Format("line-{0}", oldPos.LineNo + 1);
+
+            Jump newPos = new Jump(info, file, 0,pos);
+            while (_JumpList.Count > _Cursor + 1 ||
+                    _JumpList.Count > 0 && _JumpList[_JumpList.Count - 1].File == file && _JumpList[_JumpList.Count - 1].Pos == pos)
+                _JumpList.RemoveAt(_JumpList.Count - 1);
+
+            if (_JumpList.Count == 0 || _JumpList.Count > 0 && (_JumpList[_JumpList.Count - 1].LineNo != oldPos.LineNo || _JumpList[_JumpList.Count - 1].File != oldPos.File))
+                _JumpList.Add(oldPos);
+            _JumpList.Add(newPos);
+
+            while (_JumpList.Count > 20)    // 最多保留20项
+                _JumpList.RemoveAt(0);
+            _Cursor = _JumpList.Count - 1;
+        }
+        /*public static void Add(string info, string file, int lineNo)
         {
             if (!System.IO.File.Exists(file))
                 return;
@@ -62,7 +82,7 @@ namespace NppPIALexer2
             while (_JumpList.Count > 20)    // 最多保留20项
                 _JumpList.RemoveAt(0);
             _Cursor = _JumpList.Count - 1;
-        }
+        }*/
 
         public static Jump Cursor
         {

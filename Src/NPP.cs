@@ -271,8 +271,10 @@ namespace NppPIALexer2
         public static void GoToDefinition(string file, int pos)
         {
             NPP.OpenFile(file);
-            Win32.SendMessage(PluginBase.GetCurrentScintilla(), SciMsg.SCI_GOTOPOS, pos, 0);
-            NPP.GetCurrentWord2();
+            int _line =GetLineFromPosition(pos);
+            GoToLine(_line);
+            //Win32.SendMessage(PluginBase.GetCurrentScintilla(), SciMsg.SCI_GOTOPOS, pos, 0);
+            //NPP.GetCurrentWord2();
         }
 
         /// <summary>
