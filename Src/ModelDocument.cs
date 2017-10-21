@@ -112,9 +112,9 @@ namespace NppPIALexer2 {
     private int SEQ_VERSION = 2;
     public String getSourceDir() {
         if (SEQ_VERSION == 1) {
-            return "\\SOURCE";
+            return "SOURCE";
         }
-        return "\\App\\plugins"; //pointing to compiled plugins
+        return "App\\plugins"; //pointing to compiled plugins
     }
     public String getSeqDir(string SubProj) {
         if (SEQ_VERSION == 1) {
@@ -360,7 +360,7 @@ namespace NppPIALexer2 {
         Log.getInstance().Add("Parsing done ", Log.EnuSeverity.Info, "");
 
     } catch (Exception ex) {
-        Log.getInstance().Add("Exception",Log.EnuSeverity.Error,"" );
+        Log.getInstance().Add(ex.Message,Log.EnuSeverity.Error,"" );
     }
     finally {	
     }
@@ -383,12 +383,12 @@ namespace NppPIALexer2 {
         } else if(Cmd.GetType().Equals(typeof(Parser2.CmdInclude))) {
             Parser2.CmdInclude Cmd2 = (Parser2.CmdInclude)Cmd; 
             Obj _obj = new Obj(Scope, Cmd2.m_Path,
-                 m_ProjectDir + getSeqDir(getSubProj()[0]/*??*/) + "\\" + Cmd2.m_Path, Cmd2.Description());	//Todo das ist falsch bei Subproject-Includes
+                 /*m_ProjectDir +*/ getSeqDir(getSubProj()[0]/*??*/) + "\\" + Cmd2.m_Path, Cmd2.Description());	//Todo das ist falsch bei Subproject-Includes
             UpdateObjList(_obj);
         } else if(Cmd.GetType().Equals(typeof(Parser2.CmdUsing))) {
             Parser2.CmdUsing Cmd2 = (Parser2.CmdUsing)Cmd;
             Obj _obj = new Obj(Scope, Cmd2.m_Name,
-                        m_ProjectDir + getSourceDir() + "\\" + Cmd2.m_Path, Cmd2.Description());
+                        /*m_ProjectDir +*/ getSourceDir() + "\\" + Cmd2.m_Path, Cmd2.Description());
             UpdateObjList(_obj);
         } else if(Cmd.GetType().Equals(typeof(Parser2.CmdFunctionDecl))) {
             Parser2.CmdFunctionDecl Cmd2 = (Parser2.CmdFunctionDecl)Cmd;

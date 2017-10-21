@@ -110,6 +110,7 @@ namespace NppPIALexer2 {
                     while (m_Subs.MoveNext()) {
                         if (m_Subs.Current.GetNodeType().Equals(typeof(Tokenizer.RuleString))) {
                             this.m_Path = m_Subs.Current.GetValue(false);
+                            m_Path=m_Path.Replace("\"", "");
                             break;
                         }
                         this.m_Length = m_Subs.Current.GetPosEnd() - Token.GetPosStart();
@@ -187,6 +188,7 @@ namespace NppPIALexer2 {
                     while (m_Subs.MoveNext()) {
                         if (m_Subs.Current.GetNodeType().Equals(typeof(Tokenizer.RuleString))) {
                             this.m_Path = m_Subs.Current.GetValue(false);
+                            m_Path = m_Path.Replace("\"", "");
                             //"UserManager.lvlibp:UserManager.lvclass"   -> Name=UserManager
                             Match m = m_RegEx.Match(this.m_Path, 0);
                             if(m.Success && m.Groups.Count == 4) {

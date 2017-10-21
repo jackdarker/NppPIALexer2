@@ -209,16 +209,24 @@ namespace NppPIALexer2.Forms
                 return;
             ModelDocument _Model = proj.Model;
             _Scope = _Model.GetRelativePath(_Scope);
-            List<Obj>.Enumerator _Objs =_Model.GetObjects(_Scope).GetEnumerator();
             TreeNode parent = new TreeNode(_Scope);
+            _InsertTagsSub(parent, _Scope, _Model);
+            tvClassView.Nodes.Clear();
+            tvClassView.Nodes.Add(parent);
+            tvClassView.ExpandAll();
+        }
+        void _InsertTagsSub(TreeNode parent, String _Scope, ModelDocument _Model) {
+            List<Obj>.Enumerator _Objs = _Model.GetObjects(_Scope).GetEnumerator();
             parent.BeginEdit();
-            while (_Objs.MoveNext()) {
+            while(_Objs.MoveNext()) {
                 TreeNode node = new TreeNode();
-                node.Text = _Objs.Current.ClassID()+" "+_Objs.Current.Name();
+                node.Text = _Objs.Current.ClassID() + " " + _Objs.Current.Name();
                 node.Tag = _Objs.Current;
                 node.ImageIndex = node.SelectedImageIndex = Resource.ClassViewIcon_Cpp_Variable;
                 node.ToolTipText = _Objs.Current.Description();
                 parent.Nodes.Add(node);
+                //Recursiv für jedes Object prüfen ob Subdeclaration vorhanden (Sequenz & lvclass)
+                _InsertTagsSub(node, (_Objs.Current.ClassID()), _Model);
             }
             List<ObjDecl>.Enumerator _ObjsDecl = _Model.GetFunctions(_Scope).GetEnumerator();
             while(_ObjsDecl.MoveNext()) {
@@ -230,9 +238,6 @@ namespace NppPIALexer2.Forms
                 parent.Nodes.Add(node);
             }
             parent.EndEdit(false);
-            tvClassView.Nodes.Clear();
-            tvClassView.Nodes.Add(parent);
-            tvClassView.ExpandAll();
         }
         /// <summary>
         /// 将标签添加到浏览树
