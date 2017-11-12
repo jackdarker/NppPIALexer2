@@ -121,6 +121,9 @@ namespace NppPIALexer2 {
         abstract public class Rule {
             protected Rule m_Parent;
             public int m_Score;
+            public Rule GetParent() {
+                return m_Parent;
+            }
             public Rule(Rule Parent) { 
                 m_Parent = Parent; 
             }
@@ -397,7 +400,7 @@ namespace NppPIALexer2 {
             }
         }
         /// <summary>
-        /// 
+        /// only used to skip a line that cannot be parsed
         /// </summary>
         public class RuleAnyLine : RuleRegex {
             public RuleAnyLine(Rule Parent)
@@ -440,6 +443,7 @@ namespace NppPIALexer2 {
         public class RuleDecl : RuleSequence {
             public RuleDecl(Rule Parent): base(Parent) {
                 m_Parent = this;
+                this.AddNode(new RuleSpaceOptional(m_Parent));
                 this.AddNode(new RuleBaseType(m_Parent));
                 this.AddNode(new RuleSpace(m_Parent));
                 this.AddNode(new RuleName(m_Parent));
@@ -464,6 +468,7 @@ namespace NppPIALexer2 {
             public  RuleAssign(Rule Parent)
                 : base(Parent) {
                     m_Parent = this;
+                    this.AddNode(new RuleSpaceOptional(m_Parent));
                     this.AddNode(new RuleName(m_Parent));
                     this.AddNode(new RuleRegex(m_Parent,s_ManyWhitespace + "=" + s_ManyWhitespace));
                     RuleAlternative x = new RuleAlternative(m_Parent);
@@ -509,6 +514,7 @@ namespace NppPIALexer2 {
                 this.AddNode(y);
             }
         }*/
+        // use RuleExpr instead !
         public class RulePlusExpr : RuleSequence {   //('+' / '-')? S(NAME /  number / '(' S expression S ')')
             public RulePlusExpr(Rule Parent)
                 : base(Parent) {
@@ -519,10 +525,12 @@ namespace NppPIALexer2 {
                 this.AddNode(x);
             }
         }
+        // mathematical formula like (x+5)*y
         public class RuleExpr : RuleSequence {  //multiplicative_expression (S ('+' / '-') S multiplicative_expression)* 
             public RuleExpr(Rule Parent)
                 : base(Parent) {
                     m_Parent = this;
+                    this.AddNode(new RuleSpaceOptional(m_Parent));
                     this.AddNode(new RuleMultExpr(m_Parent));
                     RuleSequence x = new RuleSequence(m_Parent);
                     x.AddNode(new RuleRegex(m_Parent,"(\\+|\\-)"));
@@ -536,7 +544,7 @@ namespace NppPIALexer2 {
             public RuleInclude(Rule Parent)
                 : base(Parent) {
                     m_Parent = this;
-                    this.AddNode(new RuleRegex(m_Parent, "#include" + s_ManyWhitespace));
+                    this.AddNode(new RuleRegex(m_Parent, s_ManyWhitespace+"#include" + s_ManyWhitespace));
                 this.AddNode(new RuleString(m_Parent));
                 this.AddNode(new RuleEOLComment(m_Parent));
             }
@@ -545,7 +553,7 @@ namespace NppPIALexer2 {
             public RuleUsing(Rule Parent)
                 : base(Parent) {
                 m_Parent = this;
-                this.AddNode(new RuleRegex(m_Parent, "using" + s_ManyWhitespace));
+                this.AddNode(new RuleRegex(m_Parent, s_ManyWhitespace+"using" + s_ManyWhitespace));
                 this.AddNode(new RuleString(m_Parent));
                 
                 RuleSequence x = new RuleSequence(m_Parent);
@@ -558,30 +566,95 @@ namespace NppPIALexer2 {
                 this.AddNode(new RuleEOLComment(m_Parent));
             }
         }
+        //curled braces following functiondecl. or while, if,... 
         public class RuleBody : RuleSequence {   //{ ...  } EOL
             public RuleBody(Rule Parent)
                 : base(Parent) {
                     if (Parent == null) m_Parent = this;
                     RuleAlternative x = new RuleAlternative(m_Parent);
                     RuleSequence y = new RuleSequence(m_Parent);
-                    y.AddNode(new RuleRegex(m_Parent, "[^{}]+"));
-                    x.AddNode(y);
+                    //??y.AddNode(new RuleRegex(m_Parent, "[^{}]+")); //anything that is not { }
+                    //x.AddNode(y);
+
+                    addRule(x, new RuleDecl(m_Parent));
+                    addRule(x, new RuleAssign(m_Parent));
+                    addRule(x, new RuleEOLComment(m_Parent));
+                    addRule(x, new RuleWhile(m_Parent, this)); 
+                    addRule(x, new RuleIf(m_Parent, this));     //?? body->if->body == recursion, what now
+                    addRule(x, new RuleEmptyLine(m_Parent));
+
                     y = new RuleSequence(m_Parent);
-                    y.AddNode(this);
+                    y.AddNode(this);    //.. or is body
                     x.AddNode(y);
                     RuleMultiple z = new RuleMultiple(this, 0);
-                    z.AddNode(x);
-                this.AddNode(new RuleRegex(m_Parent, "{"+s_ManyWhitespace));
+                    z.AddNode(x); //there can be several instances in between {}
+                    this.AddNode(new RuleRegex(m_Parent, s_ManyWhitespace+"{" + s_ManyWhitespace));
+                this.AddNode(new RuleEOL(m_Parent));
                 this.AddNode(z);
-                this.AddNode(new RuleRegex(m_Parent, "}"+s_ManyWhitespace));
-              //  this.AddNode(new RuleEOLComment(m_Parent));
+                this.AddNode(new RuleRegex(m_Parent, s_ManyWhitespace+"}"+s_ManyWhitespace));
+                this.AddNode(new RuleEOL(m_Parent));
+            }
+            private Rule addRule(RuleAlternative Collection, Rule ToAdd) {
+                RuleSequence y = new RuleSequence(ToAdd.GetParent());
+                y.AddNode(ToAdd);
+                Collection.AddNode(y);
+                return Collection;
             }
         }
+        public class RuleIf : RuleSequence { //'if' S* '(' EXPRESSION ')' (COMMENT | EOL) BODY ('else' (COMMENT | EOL) BODY)?
+            public RuleIf(Rule Parent, RuleBody Body)   
+                : base(Parent) {
+                    m_Parent = this;
+                this.AddNode(new RuleRegex(m_Parent,s_ManyWhitespace+"if[ \\t]+"));
+                this.AddNode(new RuleLPar(m_Parent));
+                this.AddNode(new RuleExpr(m_Parent));
+                this.AddNode(new RuleRPar(m_Parent));
+                this.AddNode(new RuleEOLComment(m_Parent));
+                this.AddNode(Body);
+                RuleOption y = new RuleOption(m_Parent);
+                RuleSequence x = new RuleSequence(m_Parent);
+                x.AddNode(new RuleRegex(m_Parent, s_ManyWhitespace + "else"));
+                x.AddNode(new RuleEOLComment(m_Parent));
+                x.AddNode(Body);
+                y.AddNode(x);
+                this.AddNode(y);
+            }
+        }
+        public class RuleWhile : RuleSequence { //'while' S* '(' EXPRESSION ')' (COMMENT | EOL) BODY 
+            public RuleWhile(Rule Parent, RuleBody Body)
+                : base(Parent) {
+                m_Parent = this;
+                this.AddNode(new RuleRegex(m_Parent, s_ManyWhitespace + "while[ \\t]+"));
+                this.AddNode(new RuleLPar(m_Parent));
+                this.AddNode(new RuleExpr(m_Parent));
+                this.AddNode(new RuleRPar(m_Parent));
+                this.AddNode(new RuleEOLComment(m_Parent));
+                this.AddNode(Body);
+            }
+        }
+       /* public class RuleSwitch : RuleSequence { //'switch' S* '(' EXPRESSION ')' (COMMENT | EOL) '{' EOL 
+                                                //('case ' VALUE ':' EOL
+                                                //    ...
+                                                //    BREAK )?
+                                                // 'default:' EOL
+                                                //    ...
+                                                //'}' 
+            public RuleSwitch(Rule Parent, RuleBody Body)
+                : base(Parent) {
+                m_Parent = this;
+                this.AddNode(new RuleRegex(m_Parent, s_ManyWhitespace + "while[ \\t]+"));
+                this.AddNode(new RuleLPar(m_Parent));
+                this.AddNode(new RuleExpr(m_Parent));
+                this.AddNode(new RuleRPar(m_Parent));
+                this.AddNode(new RuleEOLComment(m_Parent));
+                this.AddNode(Body);
+            }
+        }*/
         public class RuleFunctionDecl : RuleSequence {  //'function ' NAME S*'(' PARAMDECL? ')' S* RETDECL? S* '{' (COMMENT | EOL) FUNCBODY '}' EOL? 
             public RuleFunctionDecl(Rule Parent)
                 : base(Parent) {
                     m_Parent = this;
-                this.AddNode(new RuleRegex(m_Parent,"function[ \\t]+"));
+                this.AddNode(new RuleRegex(m_Parent,s_ManyWhitespace+"function[ \\t]+"));
                 this.AddNode(new RuleName(m_Parent));
                 this.AddNode(new RuleLPar(m_Parent));
                 RuleOption y = new RuleOption(m_Parent);
@@ -592,6 +665,9 @@ namespace NppPIALexer2 {
                 y.AddNode(new RuleRetDecl(m_Parent));
                 this.AddNode(y);
                 this.AddNode(new RuleEOLComment(m_Parent));
+                y = new RuleOption(m_Parent);       //body is optional??
+                y.AddNode(new RuleBody(m_Parent));
+                this.AddNode(y);
             }
         }
         /// <summary>
@@ -644,6 +720,7 @@ namespace NppPIALexer2 {
         #endregion
 
         RuleEvaluater Rules;
+
         public class RuleEvaluater  : RuleOption {
             public RuleEvaluater()  : base(null) {
                 //add all Rules that could make up one complete Line to a list

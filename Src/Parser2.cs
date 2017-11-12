@@ -238,7 +238,7 @@ namespace NppPIALexer2 {
                 if (Token.GetTopNodeType().Equals(typeof(Tokenizer.RuleParamDecl)) ||
                     Context.m_ActualCmd.Equals(typeof(Tokenizer.RuleDecl)) ||
                     Token.GetTopNodeType().Equals(typeof(Tokenizer.RuleRetDecl))) {
-                    this.m_Type = Token.GetValue(false);
+                    /*this.m_Type = Token.GetValue(false);
                     this.m_StartPos = Token.GetPosStart();
                     this.m_Length = Token.GetPosEnd() - Token.GetPosStart();
                     if (this.m_Type.Equals("int") || this.m_Type.Equals("bool") ||
@@ -246,10 +246,20 @@ namespace NppPIALexer2 {
                         this.m_Type.Equals("variant")) {
                     } else {
                         this.m_Error += Token.GetValue(false) + " is not a valid Type";
+                    }*/
+
+                    if (Token.GetNodeType().Equals(typeof(Tokenizer.RuleBaseType))) {
+                        this.m_Type = Token.GetValue(false);
+                        this.m_StartPos = Token.GetPosStart();
+                        this.m_Length = Token.GetPosEnd() - Token.GetPosStart();
                     }
-                    
                     LinkedList<Tokenizer.Token>.Enumerator m_Subs = Token.GetEnumerator();
                     while (m_Subs.MoveNext()) {
+                        if (m_Subs.Current.GetNodeType().Equals(typeof(Tokenizer.RuleBaseType))) {
+                            this.m_Type = m_Subs.Current.GetValue(false);
+                            this.m_StartPos = m_Subs.Current.GetPosStart();
+                            this.m_Length = m_Subs.Current.GetPosEnd() - m_Subs.Current.GetPosStart();
+                        }
                         if (m_Subs.Current.GetNodeType().Equals(typeof(Tokenizer.RuleName))) {
                             this.m_Name = m_Subs.Current.GetValue(false);
                             break;

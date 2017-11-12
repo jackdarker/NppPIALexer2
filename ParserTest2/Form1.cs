@@ -22,6 +22,9 @@ namespace ParserTest2 {
             stringToRead.AppendLine("int Test2 //another comment");
             stringToRead.AppendLine("Test=3+2*5");
             stringToRead.AppendLine("function boom()->int count");
+            stringToRead.AppendLine("{");
+            stringToRead.AppendLine("int x=2");
+            stringToRead.AppendLine("}");
             stringToRead.AppendLine("function kaboom(bool count,int size) -> string test, double");
             stringToRead.AppendLine("Test=X\nTest2=Y");
             stringToRead.AppendLine("{ xcv }");
