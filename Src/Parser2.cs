@@ -287,6 +287,7 @@ namespace NppPIALexer2 {
             public String m_Name="";
             public LinkedList<CmdDecl> m_Params = new LinkedList<CmdDecl>();
             public LinkedList<CmdDecl> m_Returns = new LinkedList<CmdDecl>();
+            public LinkedList<CmdDecl> m_Vars = new LinkedList<CmdDecl>();
             public override CmdBase Copy() {
                 return new CmdFunctionDecl(this);
             }
@@ -296,6 +297,7 @@ namespace NppPIALexer2 {
                 m_Name = CopyThis.m_Name;
                 m_Params = new LinkedList<CmdDecl>(CopyThis.m_Params);
                 m_Returns = new LinkedList<CmdDecl>(CopyThis.m_Returns);
+                m_Vars = new LinkedList<CmdDecl>(CopyThis.m_Vars);
             }
             override public Boolean TryParse(Context Context, Tokenizer.Token Token) {
                 m_Error = "";

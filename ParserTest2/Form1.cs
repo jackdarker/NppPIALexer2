@@ -24,6 +24,11 @@ namespace ParserTest2 {
             stringToRead.AppendLine("function boom()->int count");
             stringToRead.AppendLine("{");
             stringToRead.AppendLine("int x=2");
+            stringToRead.AppendLine("switch(x2)");
+            stringToRead.AppendLine("{");
+            stringToRead.AppendLine("case 5:");
+            stringToRead.AppendLine("string z;");
+            stringToRead.AppendLine("}");
             stringToRead.AppendLine("while(x==2)");
             stringToRead.AppendLine("{");
             stringToRead.AppendLine("x=3");
@@ -33,7 +38,9 @@ namespace ParserTest2 {
             stringToRead.AppendLine("}");
             stringToRead.AppendLine("}");
             stringToRead.AppendLine("function kaboom(bool count,int size) -> string test, double");
-            stringToRead.AppendLine("Test=X\nTest2=Y");
+            stringToRead.AppendLine("{");
+            stringToRead.AppendLine("Test=X\r\nTest2=Y");
+            stringToRead.AppendLine("}");
 
             this.textBox2.Text = stringToRead.ToString();
         }

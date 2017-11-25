@@ -120,7 +120,6 @@ namespace NppPIALexer2 {
         }
         abstract public class Rule {
             protected Rule m_Parent;
-            public int m_Score;
             public Rule GetParent() {
                 return m_Parent;
             }
@@ -130,6 +129,7 @@ namespace NppPIALexer2 {
             public bool IsCmd() {
                 return this.Equals(m_Parent);
             }
+            public int m_Score;
             public void Match() {
                 if(m_Parent != null)
                     m_Parent.m_Score++;
@@ -322,6 +322,11 @@ namespace NppPIALexer2 {
                 this.AddNode(new RuleRegex(m_Parent,
                     s_ManyWhitespace+"[;]*"+s_ManyWhitespace + "//[^\\r\\n]*"));
                 this.AddNode(new RuleEOL(Parent));
+            }
+        }
+        public class RuleBreak : RuleRegex {
+            public RuleBreak(Rule Parent)
+                : base(Parent, s_ManyWhitespace + "\\bbreak\\b" + s_ManyWhitespace) {
             }
         }
         /// <summary>
@@ -541,11 +546,26 @@ namespace NppPIALexer2 {
             }
         }
         //use RuleBoolExpr instead !
-        public class RuleBoolVarExpr : RuleSequence {   //('!')? S(NAME /  BOOL / '(' S expression S ')')
+        public class RuleCompareExpr : RuleSequence {   // (NAME /  BOOL / NUMBER / STRING )S ( >=/ <= / == / !=)S (NAME /  BOOL / NUMBER / STRING )
+            public RuleCompareExpr(Rule Parent)
+                : base(Parent) {
+                RuleAlternative x = new RuleAlternative(Parent);
+                x.AddNode(new RuleName(Parent));
+                x.AddNode(new RuleBool(Parent));
+                x.AddNode(new RuleNumber(Parent));
+                x.AddNode(new RuleString(Parent));
+                this.AddNode(x);
+                this.AddNode(new RuleRegex(m_Parent, "(\\=\\=|\\>\\=|\\<\\=|\\>|\\<|\\!\\=)"));
+                this.AddNode(x);
+            }
+        }
+        //use RuleBoolExpr instead !
+        public class RuleBoolVarExpr : RuleSequence {   //('!')? S(NAME /  BOOL / '(' S Comparission S ')')
             public RuleBoolVarExpr(Rule Parent)
                 : base(Parent) {
                 this.AddNode(new RuleRegex(m_Parent, "(!)?"));
                 RuleAlternative x = new RuleAlternative(Parent);
+                x.AddNode(new RuleCompareExpr(Parent));
                 x.AddNode(new RuleName(Parent));
                 x.AddNode(new RuleBool(Parent));
                 this.AddNode(x);
@@ -556,7 +576,7 @@ namespace NppPIALexer2 {
                 : base(Parent) {
                 this.AddNode(new RuleBoolVarExpr(Parent));
                 RuleSequence x = new RuleSequence(Parent);
-                x.AddNode(new RuleRegex(m_Parent, "(\\|\\||\\&\\&)"));      //todo Number <= Number bool!=bool
+                x.AddNode(new RuleRegex(m_Parent, "(\\|\\||\\&\\&)"));      //todo Number <= Number bool!=bool \\=\\=|\\>\\=|\\<\\=|\\>|\\<|\\!\\=
                 x.AddNode(new RuleBoolVarExpr(Parent));
                 RuleMultiple y = new RuleMultiple(Parent, 0);
                 y.AddNode(x);
@@ -623,7 +643,9 @@ namespace NppPIALexer2 {
                     addRule(x, new RuleAssign(m_Parent));
                     addRule(x, new RuleEOLComment(m_Parent));
                     addRule(x, new RuleWhile(m_Parent));
-                    addRule(x, new RuleIf(m_Parent));     //?? body->if->body == recursion, what now
+                    addRule(x, new RuleIf(m_Parent));
+                    addRule(x, new RuleSwitch(m_Parent));
+                    addRule(x, new RuleBreak(m_Parent));
                     //addRule(x, new RuleEmptyLine(m_Parent));
                     
                    /* y = new RuleSequence(m_Parent);
@@ -685,24 +707,66 @@ namespace NppPIALexer2 {
                 this.AddNode(new RuleRCurlPar(m_Parent));
             }
         }
-       /* public class RuleSwitch : RuleSequence { //'switch' S* '(' EXPRESSION ')' (COMMENT | EOL) '{' EOL 
-                                                //('case ' VALUE ':' EOL
-                                                //    ...
-                                                //    BREAK )?
-                                                // 'default:' EOL
-                                                //    ...
-                                                //'}' 
-            public RuleSwitch(Rule Parent, RuleBody Body)
-                : base(Parent) {
-                m_Parent = this;
-                this.AddNode(new RuleRegex(m_Parent, s_ManyWhitespace + "while[ \\t]+"));
-                this.AddNode(new RuleLPar(m_Parent));
-                this.AddNode(new RuleExpr(m_Parent));
-                this.AddNode(new RuleRPar(m_Parent));
-                this.AddNode(new RuleEOLComment(m_Parent));
-                this.AddNode(Body);
-            }
-        }*/
+        public class RuleSwitch : RuleSequence { //'switch' S* '(' EXPRESSION ')' (COMMENT | EOL) '{' EOL 
+                                                 //('case ' VALUE ':' EOL
+                                                 //    ...
+                                                 //    BREAK )?
+                                                 // 'default:' EOL
+                                                 //    ...
+                                                 //'}' 
+             public RuleSwitch(Rule Parent)
+                 : base(Parent) {
+                 m_Parent = this;
+                 this.AddNode(new RuleRegex(m_Parent, s_ManyWhitespace + "\\bswitch\\b" + s_ManyWhitespace));
+                 this.AddNode(new RuleLPar(m_Parent));
+                 this.AddNode(new RuleName(m_Parent));
+                 this.AddNode(new RuleRPar(m_Parent));
+                 this.AddNode(new RuleEOLComment(m_Parent));
+                 this.AddNode(new RuleLCurlPar(m_Parent));
+                 RuleMultiple x = new RuleMultiple(m_Parent,0);
+                 x.AddNode(new RuleSwitchCase(m_Parent));
+                 this.AddNode(x);
+                 RuleOption y = new RuleOption(m_Parent);
+                 y.AddNode(new RuleSwitchDefault(m_Parent));
+                 this.AddNode(y);
+                 this.AddNode(new RuleRCurlPar(m_Parent));
+             }
+         }
+         public class RuleSwitchCase : RuleSequence { //('case ' (NUMBER | STRING) ':' EOL
+                                                 //    ...
+                                                 //    BREAK )?
+                                                 // 'default:' EOL
+                                                 //    ...
+                                                 //'}' 
+             public RuleSwitchCase(Rule Parent)
+                 : base(Parent) {
+                 m_Parent = this;
+                 this.AddNode(new RuleRegex(m_Parent, s_ManyWhitespace + "\\bcase\\b" + s_ManyWhitespace));
+                RuleAlternative x = new RuleAlternative(m_Parent); 
+                x.AddNode(new RuleNumber(m_Parent));
+                x.AddNode(new RuleString(m_Parent));
+                this.AddNode(x);
+                this.AddNode(new RuleRegex(m_Parent, s_ManyWhitespace + ":" + s_ManyWhitespace));
+                 this.AddNode(new RuleEOLComment(m_Parent));
+                this.AddNode(new RuleBody(m_Parent));
+             }
+        }
+         public class RuleSwitchDefault : RuleSequence { //('case ' (NUMBER | STRING) ':' EOL
+             //    ...
+             //    BREAK )?
+             // 'default:' EOL
+             //    ...
+             //'}' 
+             public RuleSwitchDefault(Rule Parent)
+                 : base(Parent) {
+                 m_Parent = this;
+                 this.AddNode(new RuleRegex(m_Parent, s_ManyWhitespace + "\\bdefault\\b" + s_ManyWhitespace));
+                 this.AddNode(new RuleRegex(m_Parent, s_ManyWhitespace + ":" + s_ManyWhitespace));
+                 this.AddNode(new RuleEOLComment(m_Parent));
+                 this.AddNode(new RuleBody(m_Parent));
+             }
+         }
+         
         public class RuleFunctionDecl : RuleSequence {  //'function ' NAME S*'(' PARAMDECL? ')' S* RETDECL? S* '{' (COMMENT | EOL) FUNCBODY '}' EOL? 
             public RuleFunctionDecl(Rule Parent)
                 : base(Parent) {
