@@ -248,7 +248,10 @@ namespace NppPIALexer2 {
                         if (ResultA.IsValid()) {
                             ResultA.Combine(ResultB);
                         } else {
-                            ResultA = ResultB;
+                            ResultA = new Token(false);
+                            ResultA.SetValue("", ResultB.GetPosStart(), m_Parent, this);
+                            ResultA.Combine(ResultB);
+                            //ResultA = ResultB;
                         }
                     } 
                     Run = ResultB.IsValid();
@@ -462,7 +465,9 @@ namespace NppPIALexer2 {
 
         #endregion
         #region structures
-        //Variable Declaration      int x   |    int x=5
+        /// <summary>
+        /// Variable Declaration      int x   |    int x=5
+        /// </summary>
         public class RuleDecl : RuleSequence {
             public RuleDecl(Rule Parent): base(Parent) {
                 m_Parent = this;
@@ -628,9 +633,9 @@ namespace NppPIALexer2 {
             }
         }
         //curled braces following functiondecl. or while, if,... 
-        public class RuleBody : RuleSequence {   //{ ...  } EOL
+        public class RuleBody : RuleMultiple {   //{ ...  } EOL
             public RuleBody(Rule Parent)
-                : base(Parent) {
+                : base(Parent,0) {
                     if (Parent == null) m_Parent = this;
                     
             }
@@ -638,10 +643,6 @@ namespace NppPIALexer2 {
             public override Token Evaluate(string stream, ref int pos) {
                 if (m_Initialised == false) {
                     RuleAlternative x = new RuleAlternative(m_Parent);
-                    RuleSequence y = new RuleSequence(m_Parent);
-                    //??y.AddNode(new RuleRegex(m_Parent, "[^{}]+")); //anything that is not { }
-                    //x.AddNode(y);
-
                     addRule(x, new RuleDecl(m_Parent));
                     addRule(x, new RuleAssign(m_Parent));
                     addRule(x, new RuleEOLComment(m_Parent));
@@ -651,16 +652,9 @@ namespace NppPIALexer2 {
                     addRule(x, new RuleBreak(m_Parent));
                     //addRule(x, new RuleEmptyLine(m_Parent));
                     
-                   /* y = new RuleSequence(m_Parent);
-                    y.AddNode(this);    //.. or is body
-                    x.AddNode(y);*/
-                    RuleMultiple z = new RuleMultiple(this, 0);
-                    z.AddNode(x); //there can be several instances in between {}
-                    /*this.AddNode(new RuleRegex(m_Parent, s_ManyWhitespace + "{" + s_ManyWhitespace));
-                    this.AddNode(new RuleEOLComment(m_Parent));*/
-                    this.AddNode(z);
-                    /*this.AddNode(new RuleRegex(m_Parent, s_ManyWhitespace + "}" + s_ManyWhitespace));
-                    this.AddNode(new RuleEOLComment(m_Parent));*/
+                    //RuleMultiple z = new RuleMultiple(this, 0);
+                    //z.AddNode(x); //there can be several instances in between {}
+                    this.AddNode(x);
                     this.m_Initialised = true;
                 }
 
@@ -795,22 +789,23 @@ namespace NppPIALexer2 {
         /// <summary>
         /// Parameter Declaration of function, sequencecalls,...
         /// </summary>
-        public class RuleParamDecl : RuleSequence {  // BASETYPE S NAME S (, BASETYPE S NAME S )*
+        public class RuleParamDecl : RuleMultiple {  // BASETYPE S NAME S (, BASETYPE S NAME S )*
             public RuleParamDecl(Rule Parent)
-                : base(Parent) {
-                    this.AddNode(new RuleBaseType(this));
-                    this.AddNode(new RuleSpace(this));
-                    this.AddNode(new RuleName(this));
-                    RuleSequence x = new RuleSequence(this);
-                    x.AddNode(new RuleSeparator(this));
-                    RuleSequence z = new RuleSequence(this);
-                    z.AddNode(new RuleBaseType(this));
-                    z.AddNode(new RuleSpace(this));
-                    z.AddNode(new RuleName(this));
-                    x.AddNode(z);
-                    RuleMultiple y = new RuleMultiple(this, 0);
+                : base(Parent,0) {
+                    
+                RuleSequence z = new RuleSequence(this);
+                z.AddNode(new RuleBaseType(this));
+                z.AddNode(new RuleSpace(this));
+                z.AddNode(new RuleName(this));
+                RuleSequence x = new RuleSequence(this);
+                x.AddNode(new RuleSeparator(this));
+                x.AddNode(z);
+                RuleMultiple y = new RuleMultiple(this, 0);
                 y.AddNode(x);
-                this.AddNode(y);
+                RuleSequence w = new RuleSequence(this);
+                w.AddNode(z);
+                w.AddNode(y);
+                this.AddNode(w);
             }
         }
         /// <summary>

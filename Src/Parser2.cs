@@ -236,6 +236,7 @@ namespace NppPIALexer2 {
                 m_Error = "";
                 Boolean _Ret = true;
                 if (Token.GetTopNodeType().Equals(typeof(Tokenizer.RuleParamDecl)) ||
+                    Token.GetTopNodeType().Equals(typeof(Tokenizer.RuleDecl))||
                     Context.m_ActualCmd.Equals(typeof(Tokenizer.RuleDecl)) ||
                     Token.GetTopNodeType().Equals(typeof(Tokenizer.RuleRetDecl))) {
 
@@ -302,17 +303,16 @@ namespace NppPIALexer2 {
                         if (m_Subs.Current.GetNodeType().Equals(typeof(Tokenizer.RuleName))) {
                             this.m_Name = m_Subs.Current.GetValue(false);
                         }
-                        if (m_Subs.Current.GetTopNodeType().Equals(typeof(Tokenizer.RuleParamDecl))) {
-                            this.m_Params = ParseParams(Context,m_Subs.Current,null);  //this is the first node in the params fe. string from (string sText,int Wolf))
+                        if (m_Subs.Current.GetNodeType().Equals(typeof(Tokenizer.RuleParamDecl))) {
+                            this.m_Params = ParseParams(Context,m_Subs.Current.GetEnumerator(),null);  //this is the first node in the params fe. string from (string sText,int Wolf))
                         }
-                        if (m_Subs.Current.GetTopNodeType().Equals(typeof(Tokenizer.RuleRetDecl))) {
-                            this.m_Returns = ParseReturns(Context, m_Subs.Current, null);  //this is the first node in the params fe. string from (string sText,int Wolf))
+                        if (m_Subs.Current.GetNodeType().Equals(typeof(Tokenizer.RuleRetDecl))) {
+                            this.m_Returns = ParseReturns(Context, m_Subs.Current.GetEnumerator(), null);  //this is the first node in the params fe. string from (string sText,int Wolf))
                         }
                         this.m_Length = m_Subs.Current.GetPosEnd() - Token.GetPosStart();   //length without following body
                         if (_ParseBody==true) {
                             if (!m_Subs.Current.GetNodeType().Equals(typeof(Tokenizer.RuleRCurlPar))) {
-                                CmdFuncBody x = new CmdFuncBody(); //Todo
-                                x.TryParse(Context, m_Subs.Current);
+                                this.m_Vars = ParseLocals(Context, m_Subs.Current,null);
                             }
                         }
                         if (m_Subs.Current.GetNodeType().Equals(typeof(Tokenizer.RuleLCurlPar))) {
@@ -326,28 +326,53 @@ namespace NppPIALexer2 {
                     return false;
                 }
             }
+            static LinkedList<CmdDecl> ParseLocals(Context Context, Tokenizer.Token m_Params, LinkedList<CmdDecl> ListIn) {
+                if (ListIn == null) {
+                    ListIn = new LinkedList<CmdDecl>();
+                }
+
+                LinkedList<Tokenizer.Token>.Enumerator Params = m_Params.GetEnumerator();
+                while (Params.MoveNext()) {
+                    if (Params.Current.GetTopNodeType().Equals(typeof(Tokenizer.RuleDecl))) {
+                        CmdDecl x = new CmdDecl();
+                        if (x.TryParse(Context, Params.Current)) {
+                            ListIn.AddLast(x);
+                        }
+                        //more Params - go deeper into the tree
+                        //Todo
+                        /* LinkedList<Tokenizer.Token>.Enumerator ParamsNext = Params.Current.GetEnumerator();
+                         if (ParamsNext.MoveNext()) {    //Todo ??
+                             ListIn = ParseLocals(Context, ParamsNext.Current, ListIn);
+                         }*/
+                        // TODO else Param is missing
+                    }
+                    //Console.WriteLine(Params.Current.GetValue(false));
+                }
+                return ListIn;
+            }
             /// <summary>
             /// Parses a Return-List by Recursion
             /// </summary>
             /// <param name="m_Params">Start-Node of the Return-List</param>
             /// <param name="ListIn">Null</param>
             /// <returns></returns>
-            static LinkedList<CmdDecl> ParseReturns(Context Context, Tokenizer.Token m_Params, LinkedList<CmdDecl> ListIn) {
+            static LinkedList<CmdDecl> ParseReturns(Context Context, LinkedList<Tokenizer.Token>.Enumerator m_Params, LinkedList<CmdDecl> ListIn) {
                 if (ListIn == null) {
                     ListIn = new LinkedList<CmdDecl>();
                 }
                 //this tree starts with ->
-                CmdDecl _Decl = new CmdDecl();
-                LinkedList<Tokenizer.Token>.Enumerator Params = m_Params.GetEnumerator();
-                while (Params.MoveNext()) {
-                    if (Params.Current.GetNodeType().Equals(typeof(Tokenizer.RuleSeparator))) {
-                        //more Params ? - go deeper into the tree
-                            ListIn = ParseReturns(Context, Params.Current, ListIn);
-                         // TODO else Param is missing
-                    } else if (Params.Current.GetNodeType().Equals(typeof(Tokenizer.RuleBaseType))) {
-                        _Decl.TryParse(Context, Params.Current);
+                //LinkedList<Tokenizer.Token>.Enumerator Params = m_Params.GetEnumerator();
+                while (m_Params.MoveNext()) {
+                    if (m_Params.Current.GetNodeType().Equals(typeof(Tokenizer.RuleBaseType))) {
+                        CmdDecl _Decl = new CmdDecl();
+                        _Decl.TryParse(Context, m_Params.Current);
                         ListIn.AddLast(_Decl);
-                        ListIn = ParseReturns(Context, Params.Current, ListIn);
+                        ListIn = ParseReturns(Context, m_Params.Current.GetEnumerator(), ListIn);
+                    } else if (m_Params.Current.GetNodeType().Equals(typeof(Tokenizer.RuleMultiple)) ||
+                         m_Params.Current.GetNodeType().Equals(typeof(Tokenizer.RuleSeparator))) {
+                        //more Params - go deeper into the tree
+                        ListIn = ParseParams(Context, m_Params.Current.GetEnumerator(), ListIn);
+                        // TODO else Param is missing
                     }
                 }
                 return ListIn;
@@ -358,25 +383,23 @@ namespace NppPIALexer2 {
             /// <param name="m_Params">Start-Node of the Params-List</param>
             /// <param name="ListIn">Null</param>
             /// <returns></returns>
-            static LinkedList<CmdDecl> ParseParams(Context Context,Tokenizer.Token m_Params,LinkedList<CmdDecl> ListIn) {
+            static LinkedList<CmdDecl> ParseParams(Context Context, LinkedList<Tokenizer.Token>.Enumerator m_Params, LinkedList<CmdDecl> ListIn) {
                 if (ListIn == null) {
                     ListIn = new LinkedList<CmdDecl>();
                 }
                 //this tree starts with the first BaseType
-                CmdDecl _Decl = new CmdDecl();
-                _Decl.TryParse(Context, m_Params);
-                ListIn.AddLast(_Decl);
-                LinkedList<Tokenizer.Token>.Enumerator Params = m_Params.GetEnumerator();
-                while (Params.MoveNext()) {
-                    if (Params.Current.GetNodeType().Equals(typeof(Tokenizer.RuleSeparator))) {
+                while (m_Params.MoveNext()) {
+                    if (m_Params.Current.GetNodeType().Equals(typeof(Tokenizer.RuleBaseType))) {
+                        CmdDecl _Decl = new CmdDecl();
+                        _Decl.TryParse(Context, m_Params.Current);
+                        ListIn.AddLast(_Decl);
+                        ParseParams(Context, m_Params.Current.GetEnumerator(), ListIn);
+                    } else if (m_Params.Current.GetNodeType().Equals(typeof(Tokenizer.RuleMultiple)) ||
+                        m_Params.Current.GetNodeType().Equals(typeof(Tokenizer.RuleSeparator))) {
                         //more Params - go deeper into the tree
-                        LinkedList<Tokenizer.Token>.Enumerator ParamsNext=Params.Current.GetEnumerator();
-                        if (ParamsNext.MoveNext()) 
-                        {
-                            ListIn = ParseParams(Context, ParamsNext.Current, ListIn);
-                        } // TODO else Param is missing
+                        ListIn = ParseParams(Context, m_Params.Current.GetEnumerator(), ListIn);
+                        // TODO else Param is missing
                     }
-                    //Console.WriteLine(Params.Current.GetValue(false));
                 }
                 return ListIn;
             }
@@ -389,13 +412,14 @@ namespace NppPIALexer2 {
                 return Text;
             }
             override public String AsText(){
-                return "Declaration of function " + m_Name + " with Params " + ParamsAsText(m_Params) + " with Returns " + ParamsAsText(m_Returns);
+                return "Declaration of function " + m_Name + " with Params " + ParamsAsText(m_Params) + 
+                    " with Returns " + ParamsAsText(m_Returns) + " with Locals " +ParamsAsText(m_Vars);
             }
         }
         /// <summary>
         /// 
         /// </summary>
-        public class CmdFuncBody : CmdBase {
+        /* unused public class CmdFuncBody : CmdBase {
             public CmdFuncBody()
                 : base() {
             }
@@ -405,33 +429,42 @@ namespace NppPIALexer2 {
             public override CmdBase Copy() {
                 return new CmdFuncBody(this);
             }
+            LinkedList<CmdDecl> m_Locals = new LinkedList<CmdDecl>();
             override public Boolean TryParse(Context Context, Tokenizer.Token Token) {
                 m_Error = "";
                 Boolean _Ret = true;
-                LinkedList<CmdDecl> y = ParseLocals(Context,Token,null);
+                m_Locals = ParseLocals(Context, Token, null);
                 return _Ret;
             }
             override public String AsText() {
-                return "Body";
+                LinkedList<CmdDecl>.Enumerator x= m_Locals.GetEnumerator();
+                string text = "local Vars: ";
+                while(x.MoveNext()) {
+                    text += x.Current.AsText() + ", ";
+                }
+                return text;
             }
             static LinkedList<CmdDecl> ParseLocals(Context Context, Tokenizer.Token m_Params, LinkedList<CmdDecl> ListIn) {
                 if (ListIn == null) {
                     ListIn = new LinkedList<CmdDecl>();
                 }
+
                 LinkedList<Tokenizer.Token>.Enumerator Params = m_Params.GetEnumerator();
                 while (Params.MoveNext()) {
-                    if (Params.Current.GetNodeType().Equals(typeof(Tokenizer.RuleSeparator))) {
+                    if (Params.Current.GetTopNodeType().Equals(typeof(Tokenizer.RuleDecl))) {
+                        CmdDecl x = new CmdDecl();
+                        if (x.TryParse(Context, Params.Current)) {
+                            ListIn.AddLast(x);
+                        }
                         //more Params - go deeper into the tree
-                        LinkedList<Tokenizer.Token>.Enumerator ParamsNext = Params.Current.GetEnumerator();
-                        if (ParamsNext.MoveNext()) {    //Todo ??
-                            ListIn = ParseLocals(Context, ParamsNext.Current, ListIn);
-                        } // TODO else Param is missing
+                        //Todo
+                        // TODO else Param is missing
                     }
                     //Console.WriteLine(Params.Current.GetValue(false));
                 }
                 return ListIn;
             }
-        }
+        }*/
 #endregion
         
 
