@@ -226,6 +226,7 @@ namespace NppPIALexer2.Forms
                 node.ToolTipText = _Objs.Current.Description();
                 parent.Nodes.Add(node);
                 //Recursiv für jedes Object prüfen ob Subdeclaration vorhanden (Sequenz & lvclass)
+                //Todo falls versehentlich recursion in den seq ist hängen wir hier fest
                 _InsertTagsSub(node, (_Objs.Current.ClassID()), _Model);
             }
             List<ObjDecl>.Enumerator _ObjsDecl = _Model.GetFunctions(_Scope).GetEnumerator();

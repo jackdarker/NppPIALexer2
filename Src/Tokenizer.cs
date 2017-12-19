@@ -351,6 +351,31 @@ namespace NppPIALexer2 {
             }
         }
         /// <summary>
+        /// a variable that points to commander
+        /// </summary>
+        public class RuleNameInstance : RuleAlternative {     // Station. but also Station[X].   Station["5"].  Station[5].
+            public RuleNameInstance(Rule Parent) : base(Parent) {
+
+                 RuleAlternative x = new RuleAlternative(m_Parent);
+                 x.AddNode(new RuleName(m_Parent));
+                 x.AddNode(new RuleNumber(m_Parent));
+                 x.AddNode(new RuleString(m_Parent));
+
+                 RuleSequence y = new RuleSequence(m_Parent);
+                 y.AddNode(new RuleName(m_Parent));
+                 y.AddNode(new RuleRegex(m_Parent,"\\[", this));
+                 y.AddNode(x);
+                 y.AddNode(new RuleRegex(m_Parent, "\\]", this));
+                 y.AddNode(new RuleRegex(m_Parent, "\\.", this));
+                 this.AddNode(y);
+
+                 y = new RuleSequence(m_Parent);
+                 y.AddNode(new RuleName(m_Parent));
+                 y.AddNode(new RuleRegex(m_Parent, "\\.", this));
+                 this.AddNode(y);
+            }
+        }
+        /// <summary>
         /// like "asd 4.3 ;214fdg"
         /// </summary>
         public class RuleString : RuleRegex {
@@ -364,6 +389,11 @@ namespace NppPIALexer2 {
         public class RuleBool : RuleRegex {
             public RuleBool(Rule Parent)
                 : base(Parent, "(true|false)", null) {
+            }
+        }
+        public class RuleNumber : RuleRegex {
+            public RuleNumber(Rule Parent)
+                : base(Parent, "[0-9]+('.'[0-9]+)?", null) {
             }
         }
         /// <summary>
@@ -448,11 +478,7 @@ namespace NppPIALexer2 {
             }
         }
         
-        public class RuleNumber : RuleRegex {
-            public RuleNumber(Rule Parent)
-                : base(Parent, "[0-9]+('.'[0-9]+)?", null) {
-            }
-        }
+        
         #endregion
         #region keywords
         //integrated basic types
@@ -632,7 +658,7 @@ namespace NppPIALexer2 {
                 this.AddNode(new RuleEOLComment(m_Parent));
             }
         }
-        //curled braces following functiondecl. or while, if,... 
+        //code in curled braces following functiondecl. or while, if,switch-case,... 
         public class RuleBody : RuleMultiple {   //{ ...  } EOL
             public RuleBody(Rule Parent)
                 : base(Parent,0) {
@@ -650,6 +676,8 @@ namespace NppPIALexer2 {
                     addRule(x, new RuleIf(m_Parent));
                     addRule(x, new RuleSwitch(m_Parent));
                     addRule(x, new RuleBreak(m_Parent));
+                    addRule(x, new RuleCommanderCall(m_Parent));
+                    addRule(x, new RuleFunctionCall(m_Parent));
                     //addRule(x, new RuleEmptyLine(m_Parent));
                     
                     //RuleMultiple z = new RuleMultiple(this, 0);
@@ -763,7 +791,96 @@ namespace NppPIALexer2 {
                  this.AddNode(new RuleBody(m_Parent));
              }
          }
-         
+        /// <summary>
+        /// a  call of a commander Function
+        /// </summary>
+         public class RuleCommanderCall : RuleSequence {  //NAME.NAME S*'(' PARAMS? ')' S* RETURNS? (COMMENT | EOL)  
+             public RuleCommanderCall(Rule Parent)
+                 : base(Parent) {
+                 m_Parent = this;
+                 this.AddNode(new RuleNameInstance(m_Parent));
+                 this.AddNode(new RuleFunctionCall(m_Parent));
+             }
+        }
+         /// <summary>
+         /// a call of asequence Function 
+         /// </summary>
+         public class RuleFunctionCall : RuleSequence {  //NAME S*'(' PARAMS? ')' S* RETURNS? (COMMENT | EOL)  
+             public RuleFunctionCall(Rule Parent)
+                 : base(Parent) {
+                 m_Parent = this;
+                 this.AddNode(new RuleName(m_Parent));
+                 this.AddNode(new RuleLPar(m_Parent));
+                 RuleOption y = new RuleOption(m_Parent);
+                 y.AddNode(new RuleParams(m_Parent));
+                 this.AddNode(y);
+                 this.AddNode(new RuleRPar(m_Parent));
+                 y = new RuleOption(m_Parent);
+                 y.AddNode(new RuleReturns(m_Parent));
+                 this.AddNode(y);
+                 this.AddNode(new RuleEOLComment(m_Parent));
+                 //Todo parse catch-exception statement
+                 RuleOption cat = new RuleOption(m_Parent);
+                 RuleSequence z = new RuleSequence(m_Parent);
+                 z.AddNode(new RuleRegex(m_Parent, "catch", this));
+                 z.AddNode(new RuleEOLComment (m_Parent));
+                 z.AddNode(new RuleLCurlPar(m_Parent));
+                 z.AddNode(new RuleBody(m_Parent));
+                 z.AddNode(new RuleRCurlPar(m_Parent));
+                 cat.AddNode(z);
+                 this.AddNode(cat);
+                 
+
+             }
+         }
+         /// <summary>
+         /// Parameter mapping of function, sequencecalls,...
+         /// </summary>
+         public class RuleParams : RuleMultiple {  // NAME S (, S NAME S )*
+             public RuleParams(Rule Parent)
+                 : base(Parent, 0) {
+
+                     RuleAlternative par = new RuleAlternative(m_Parent);
+                     par.AddNode(new RuleName(m_Parent));
+                     par.AddNode(new RuleNumber(m_Parent));
+                     par.AddNode(new RuleString(m_Parent));
+                     par.AddNode(new RuleBool(m_Parent));
+
+                 RuleSequence z = new RuleSequence(this);
+                 z.AddNode(par);
+                 RuleSequence x = new RuleSequence(this);
+                 x.AddNode(new RuleSeparator(this));
+                 x.AddNode(z);
+                 RuleMultiple y = new RuleMultiple(this, 0);
+                 y.AddNode(x);
+                 RuleSequence w = new RuleSequence(this);
+                 w.AddNode(z);
+                 w.AddNode(y);
+                 this.AddNode(w);
+             }
+         }
+         /// <summary>
+         /// Return mapping of a function,sequencecalls,...
+         /// </summary>
+         public class RuleReturns : RuleSequence {  //-> NAME (, NAME)*
+             public RuleReturns(Rule Parent)
+                 : base(Parent) {
+                 RuleSequence u = new RuleSequence(this);
+                 u.AddNode(new RuleName(this));
+
+                 this.AddNode(new RuleRegex(this, "->" + s_ManyWhitespace, this));
+                 this.AddNode(u);
+                 RuleSequence x = new RuleSequence(this);
+                 x.AddNode(new RuleSeparator(this));
+                 x.AddNode(u);
+                 RuleMultiple y = new RuleMultiple(this, 0);
+                 y.AddNode(x);
+                 this.AddNode(y);
+             }
+         }
+        /// <summary>
+        /// a function declaration in a sequence
+        /// </summary>
         public class RuleFunctionDecl : RuleSequence {  //'function ' NAME S*'(' PARAMDECL? ')' S* RETDECL? S* '{' (COMMENT | EOL) FUNCBODY '}' EOL? 
             public RuleFunctionDecl(Rule Parent)
                 : base(Parent) {

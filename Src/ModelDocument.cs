@@ -201,7 +201,7 @@ namespace NppPIALexer2 {
                 ExecuteSimpleQuery("CREATE TABLE ObjectLinks (" +
                           " ID INTEGER PRIMARY KEY AUTOINCREMENT, ID_ObjectList INT," +
                           " ID_ObjectDecl INT, ID_ObjectListRel INT)");
-                ExecuteSimpleQuery("CREATE TABLE ObjectLinksTemp (ID_A INT, ID_B INT)");
+                ExecuteSimpleQuery("CREATE TABLE ObjectLinksTemp (ID_A INT, ID_B INT, Flag INT)");
                 ExecuteSimpleQuery("CREATE INDEX i1 ON ObjectLinksTemp (ID_A,ID_B);");
                 ExecuteSimpleQuery("CREATE TABLE Markers (" +
                           " ID INTEGER PRIMARY KEY AUTOINCREMENT, Type INT," +
@@ -227,7 +227,7 @@ namespace NppPIALexer2 {
         ExecuteSimpleQuery("Update ObjectList Set State=0;");
         ExecuteSimpleQuery("Update ObjectDecl Set State=0;");
         try {
-            m_TrUpdate = GetDB().BeginTransaction();
+//??            m_TrUpdate = GetDB().BeginTransaction();        //if you want to debug database while queries are executed, you have to disable transaction !
             //??GetDB().AutoCommit=(false); // no Auto-commit !!
         } catch (Exception e) {
             HandleDBError(e);
@@ -258,8 +258,8 @@ namespace NppPIALexer2 {
         ExecuteSimpleQuery(_SQL);
 
         //jetzt für jede Seq prüfen in welcher andere Seq sie included ist (ID_ObjectListA -> ID_ObjectListB); in temp. Tabelle eintragen	
-        _SQL = "Insert Into ObjectLinksTemp (ID_A,ID_B) " +
-            " SELECT distinct tab1.ID,tab2.ID FROM ObjectList as tab1 inner join ObjectList as tab2 on tab1.ClassID==tab2.Scope " +
+        _SQL = "Insert Into ObjectLinksTemp (ID_A,ID_B, Flag) " +
+            " SELECT distinct tab1.ID,tab2.ID,0 FROM ObjectList as tab1 inner join ObjectList as tab2 on tab1.ClassID==tab2.Scope " +
             " left join ObjectDecl on ObjectDecl.ClassID==tab2.ClassID ";
         ExecuteSimpleQuery(_SQL);
 
@@ -269,10 +269,10 @@ namespace NppPIALexer2 {
         // 3) das ganze so lange wiederholen bis Select kein Ergebnis mehr liefert
         // die Tabelle enthält nun für jede Seq auch Verweise auf indirekt eingebundene Seq
         // Meine Fresse diese query verstehe ich schon jetzt nicht mehr
-        String _SQLSelect = "SELECT distinct tab2.ID_A,tab1.ID_B FROM ObjectLinksTemp as tab1 inner join " +
+        String _SQLSelect = "SELECT distinct tab2.ID_A,tab1.ID_B,2 FROM ObjectLinksTemp as tab1 inner join " +
             " ObjectLinksTemp as tab2 on (tab1.ID_A==tab2.ID_B AND tab1.ID_A!=tab1.ID_B AND tab2.ID_A!=tab2.ID_B ) " +
             " where not exists (SELECT ID_A, ID_B FROM ObjectLinksTemp where ID_A==tab2.ID_A AND ID_B==tab1.ID_B);";
-        _SQL = "Insert Into ObjectLinksTemp (ID_A,ID_B) ";  //Todo sub-seq are still listed doubled ?!
+        _SQL = "Insert Into ObjectLinksTemp (ID_A,ID_B,Flag) ";  //Todo sub-seq are still listed doubled ?!
         //Todo this is slow because of the nested Select; use EXCEPT/INTERSECT instead??
         _SQL += _SQLSelect;
         Boolean _Finished = false;
@@ -295,7 +295,7 @@ namespace NppPIALexer2 {
                 "SELECT ObjectLinksTemp.ID_A,ObjectLinks.ID_ObjectDecl,ObjectLinksTemp.ID_B " +
                 "from ObjectLinksTemp left join ObjectLinks on ObjectLinksTemp.ID_B==ObjectLinks.ID_ObjectList where ObjectLinksTemp.ID_A!=ObjectLinksTemp.ID_B";
             ExecuteSimpleQuery(_SQL);
-            m_TrUpdate.Commit();
+ //??           m_TrUpdate.Commit();
             //GetDB().commit();//ExecuteSimpleQuery("Commit transaction;"); //finish Rebuild-Transaction
             //??GetDB().setAutoCommit(true);
         } catch (Exception e) {
@@ -687,8 +687,18 @@ namespace NppPIALexer2 {
     //liefert die Objekte und Variablen einer Sequenz
     public List<Obj> GetObjects(String Scope) {
         List<Obj> Result = new List<Obj>();
-        String _SQL = "SELECT Scope,Object, ClassID FROM ObjectList "; //Todo da fehlen die Variablen aus Subsequencen
-        _SQL += " where Scope Like('" + Scope + "') AND Object!=''";
+//SELECT tab1.ID, tab2.ClassID,tab2.Object,Function,Params,Returns,ClassType,Start,Length  from ObjectLinks 
+//inner join ObjectList as tab1 on tab1.ID==ObjectLinks.ID_ObjectList
+//inner join ObjectList as tab2 on tab2.ID==ObjectLinks.ID_ObjectListRel                      
+// inner join ObjectDecl on ObjectDecl.ID==ObjectLinks.ID_ObjectDecl  
+// where tab1.Scope Like('Projects\ZBF\Sequences\test.seq') AND tab1.ClassID==tab1.Scope AND ClassType==2
+        String _SQL = "SELECT tab1.Scope,tab2.ClassID,tab2.Object,ClassType,Start,Length  from ObjectLinks  " +
+        "inner join ObjectList as tab1 on tab1.ID==ObjectLinks.ID_ObjectList " +
+        "inner join ObjectList as tab2 on tab2.ID==ObjectLinks.ID_ObjectListRel " +
+        "inner join ObjectDecl on ObjectDecl.ID==ObjectLinks.ID_ObjectDecl ";
+        _SQL += " where tab1.Scope Like('" + Scope + "') AND tab1.ClassID==tab1.Scope AND ClassType=="+((int)ObjDecl.TClassType.tCTType).ToString();
+        //Todo we dont see what is defined in other sequences
+        //alt SELECT Scope,Object, ClassID FROM ObjectList  where Scope Like('Projects\ZBF\Sequences\test.seq') AND Object!=''
         try {
             SQLiteCommand command = new SQLiteCommand(_SQL, m_dbConnection);
             SQLiteDataReader reader = command.ExecuteReader();
@@ -710,11 +720,11 @@ namespace NppPIALexer2 {
     public List<ObjDecl> GetFunctions(String Scope) {
         List<ObjDecl> Result = new List<ObjDecl>();
         String _SQL2 = " from ObjectLinks inner join ObjectList as tab1 on tab1.ID==ObjectLinks.ID_ObjectList" +
-             " inner join ObjectList as tab2 on tab2.ID==ObjectLinks.ID_ObjectListRel " +
+      //?       " inner join ObjectList as tab2 on tab2.ID==ObjectLinks.ID_ObjectListRel " +
              " inner join ObjectDecl on ObjectDecl.ID==ObjectLinks.ID_ObjectDecl ";
         String _SQL = "SELECT distinct tab1.ClassID,Function,Params,Returns,ClassType,Start,Length "; //Todo da kommen doppelte Einträge bei Funktionen aus Subsequencen
         _SQL += _SQL2;
-        _SQL += " where tab1.Scope Like('" + Scope + "') AND ObjectDecl.ClassType==" +
+        _SQL += " where tab1.Scope Like('" + Scope + "') AND tab1.ClassID==tab1.Scope AND ObjectDecl.ClassType==" +
                 ((int)ObjDecl.TClassType.tCTSeq).ToString();
         try {
             SQLiteCommand command = new SQLiteCommand(_SQL, m_dbConnection);
