@@ -164,6 +164,7 @@ namespace NppPIALexer2 {
 
         }
         static String s_ManyWhitespace = "[ \\t]*";
+        static Boolean s_SkipBody = false;
         #region BaseRules
         /// <summary>
         /// match all
@@ -330,9 +331,41 @@ namespace NppPIALexer2 {
                 this.AddNode(new RuleEOL(Parent));
             }
         }
+        /// <summary>
+        /// Exception function
+        /// </summary>
+        public class RuleException : RuleSequence {
+            public RuleException(Rule Parent) : base(Parent) {
+                this.m_Parent = this;
+                this.AddNode(new RuleRegex(m_Parent,
+                     s_ManyWhitespace + "\\bexception\\b" + s_ManyWhitespace, this));
+                this.AddNode(new RuleLPar(m_Parent));
+                this.AddNode(new RuleParams(m_Parent));
+                this.AddNode(new RuleRPar(m_Parent));
+                this.AddNode(new RuleEOL(Parent));
+            }
+        }
+        /// <summary>
+        /// break for loops or switch-case
+        /// </summary>
         public class RuleBreak : RuleRegex {
             public RuleBreak(Rule Parent)
                 : base(Parent, s_ManyWhitespace + "\\bbreak\\b" + s_ManyWhitespace, null) {
+            }
+        }
+        public class RuleReturn : RuleAlternative {    //  return or return(55,false)
+            public RuleReturn(Rule Parent): base(Parent){
+                RuleSequence x = new RuleSequence(m_Parent);
+                x.AddNode(new RuleRegex(m_Parent, s_ManyWhitespace + "return" + s_ManyWhitespace, this));
+                x.AddNode(new RuleEOLComment(m_Parent));
+                this.AddNode(x);
+                x = new RuleSequence(m_Parent);
+                x.AddNode(new RuleRegex(m_Parent, s_ManyWhitespace + "return" + s_ManyWhitespace, this));
+                x.AddNode(new RuleLPar(m_Parent));
+                x.AddNode(new RuleParams(m_Parent));
+                x.AddNode(new RuleRPar(m_Parent));
+                x.AddNode(new RuleEOLComment(m_Parent));
+                this.AddNode(x);
             }
         }
         /// <summary>
@@ -362,6 +395,7 @@ namespace NppPIALexer2 {
                  x.AddNode(new RuleString(m_Parent));
 
                  RuleSequence y = new RuleSequence(m_Parent);
+                 y.AddNode(new RuleSpaceOptional(m_Parent));
                  y.AddNode(new RuleName(m_Parent));
                  y.AddNode(new RuleRegex(m_Parent,"\\[", this));
                  y.AddNode(x);
@@ -370,6 +404,7 @@ namespace NppPIALexer2 {
                  this.AddNode(y);
 
                  y = new RuleSequence(m_Parent);
+                 y.AddNode(new RuleSpaceOptional(m_Parent));
                  y.AddNode(new RuleName(m_Parent));
                  y.AddNode(new RuleRegex(m_Parent, "\\.", this));
                  this.AddNode(y);
@@ -658,6 +693,7 @@ namespace NppPIALexer2 {
                 this.AddNode(new RuleEOLComment(m_Parent));
             }
         }
+
         //code in curled braces following functiondecl. or while, if,switch-case,... 
         public class RuleBody : RuleMultiple {   //{ ...  } EOL
             public RuleBody(Rule Parent)
@@ -668,20 +704,23 @@ namespace NppPIALexer2 {
             private bool m_Initialised = false;
             public override Token Evaluate(string stream, ref int pos) {
                 if (m_Initialised == false) {
+
                     RuleAlternative x = new RuleAlternative(m_Parent);
-                    addRule(x, new RuleDecl(m_Parent));
-                    addRule(x, new RuleAssign(m_Parent));
-                    addRule(x, new RuleEOLComment(m_Parent));
-                    addRule(x, new RuleWhile(m_Parent));
-                    addRule(x, new RuleIf(m_Parent));
-                    addRule(x, new RuleSwitch(m_Parent));
-                    addRule(x, new RuleBreak(m_Parent));
-                    addRule(x, new RuleCommanderCall(m_Parent));
-                    addRule(x, new RuleFunctionCall(m_Parent));
-                    //addRule(x, new RuleEmptyLine(m_Parent));
-                    
-                    //RuleMultiple z = new RuleMultiple(this, 0);
-                    //z.AddNode(x); //there can be several instances in between {}
+                    if (s_SkipBody) {
+                        addRule(x,new RuleRegex(m_Parent, "[^{}]+",this)); //anything that is not { }   Todo  thats not working if there ARE {} inside body
+                    } else {
+                        addRule(x, new RuleDecl(m_Parent));
+                        addRule(x, new RuleAssign(m_Parent));
+                        addRule(x, new RuleEOLComment(m_Parent));
+                        addRule(x, new RuleWhile(m_Parent));
+                        addRule(x, new RuleIf(m_Parent));
+                        addRule(x, new RuleSwitch(m_Parent));
+                        addRule(x, new RuleBreak(m_Parent));
+                        addRule(x, new RuleReturn(m_Parent));
+                        addRule(x, new RuleException(m_Parent));
+                        addRule(x, new RuleCommanderCall(m_Parent));
+                        addRule(x, new RuleFunctionCall(m_Parent));
+                    }
                     this.AddNode(x);
                     this.m_Initialised = true;
                 }
@@ -809,6 +848,7 @@ namespace NppPIALexer2 {
              public RuleFunctionCall(Rule Parent)
                  : base(Parent) {
                  m_Parent = this;
+                 this.AddNode(new RuleSpaceOptional(m_Parent));
                  this.AddNode(new RuleName(m_Parent));
                  this.AddNode(new RuleLPar(m_Parent));
                  RuleOption y = new RuleOption(m_Parent);
@@ -822,7 +862,10 @@ namespace NppPIALexer2 {
                  //Todo parse catch-exception statement
                  RuleOption cat = new RuleOption(m_Parent);
                  RuleSequence z = new RuleSequence(m_Parent);
-                 z.AddNode(new RuleRegex(m_Parent, "catch", this));
+                 z.AddNode(new RuleRegex(m_Parent, s_ManyWhitespace+"catch", this));
+                 z.AddNode(new RuleLPar(m_Parent));
+                 z.AddNode(new RuleParams(m_Parent));
+                 z.AddNode(new RuleRPar(m_Parent));
                  z.AddNode(new RuleEOLComment (m_Parent));
                  z.AddNode(new RuleLCurlPar(m_Parent));
                  z.AddNode(new RuleBody(m_Parent));
@@ -966,7 +1009,7 @@ namespace NppPIALexer2 {
                 AddNode(new RuleFunctionDecl(null));
                 AddNode(new RuleDecl(null));
                 AddNode(new RuleAssign(null));
-                AddNode(new RuleBody(null));
+              //  AddNode(new RuleBody(null));    //body is evaluated with functions?
                 AddNode(new RuleEOL(null));
                 //AddNode(new RuleEmptyLine(null));
             }
@@ -993,6 +1036,7 @@ namespace NppPIALexer2 {
             }
         }
         public Tokenizer() {
+            //s_SkipBody = true;  //??
             Rules= new RuleEvaluater();
         }
         public Token TokenizeFile(String filePath) {
@@ -1013,20 +1057,20 @@ namespace NppPIALexer2 {
                 m_IsClassDef = true;   //Version 2    its in //APP//PLUGINS//...
             }*/
             String _content=File.ReadAllText(filePath);
-            Log.getInstance().Add("Tokenize " + filePath, Log.EnuSeverity.Info, "");
-            _Ret = Tokenize(_content);
+            _Ret = Tokenize(_content, filePath);
             Rule Root = new RuleName(null);
             _Ret.SetValue(filePath, _Ret.GetPosStart(), Root, Root);
             return _Ret;
         }
-    
-        public Token Tokenize(String stream) {
+
+        public Token Tokenize(String stream, String filePath) {
             int Pos = 0;
             Token Result;
             Token FileNode = new Token();
             Rule Root = new RuleName(null);
             FileNode.SetValue("", 0, Root, Root);
             DateTime _start=DateTime.Now;
+            Log.getInstance().Add("Tokenize " + filePath, Log.EnuSeverity.Info, "");
             while(Pos<stream.Length) {
                 Result=Rules.Evaluate(stream, ref Pos);
                 if (Result != null && Result.IsValid()) {
@@ -1036,12 +1080,15 @@ namespace NppPIALexer2 {
                     Result=x.Evaluate(stream, ref Pos);
                     Result.SetError("invalid:"+Rules.GetError() + " at " + Pos.ToString());
                     FileNode.AddLast(Result);
-                    Log.getInstance().Add("invalid:" + Rules.GetError() + " at " + Pos.ToString(),Log.EnuSeverity.Warn,"");
+                    Log.getInstance().Add("invalid:" + Rules.GetError() + " at " + Pos.ToString(), 
+                        Log.EnuSeverity.Warn, 
+                        filePath + "@" + Pos.ToString());
                     break;
                 }
             }
             DateTime _end = DateTime.Now;
-            TimeSpan dt = _start - _end;
+            TimeSpan dt = _end - _start;
+            Log.getInstance().Add("Tokenized " + filePath+ " in "+ dt.TotalMilliseconds.ToString() +" ms", Log.EnuSeverity.Info, "");
             return FileNode;
         }
     };

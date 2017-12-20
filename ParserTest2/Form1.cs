@@ -84,7 +84,7 @@ namespace ParserTest2 {
             
             Tokenizer test = new Tokenizer( );
             //LinkedList<Tokenizer.Token> Tokens = 
-            m_Tokens=test.Tokenize(this.textBox2.Text);
+            m_Tokens=test.Tokenize(this.textBox2.Text,"");
             /*LinkedList<Tokenizer.Token>.Enumerator x=m_Tokens.GetEnumerator();
             while (x.MoveNext()) {
                     Console.WriteLine(x.Current.GetValue(true));

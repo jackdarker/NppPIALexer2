@@ -241,7 +241,7 @@ namespace NppPIALexer2.Forms
             parent.EndEdit(false);
         }
         /// <summary>
-        /// 将标签添加到浏览树
+        /// Add tags to browse tree
         /// </summary>
         /// <param name="root"></param>
         /// <param name="tags"></param>
@@ -254,7 +254,7 @@ namespace NppPIALexer2.Forms
             ClassViewIndex index = root.Tag as ClassViewIndex;
             foreach (ITag tag in tags)
             {
-                // 同名结点的情况, 视图中将不显示
+                // The case of a node with the same name that will not appear in the view
                 if (index.TagFullName2TreeNode_Index.ContainsKey(tag.FullName))
                     continue;
 
@@ -452,21 +452,28 @@ namespace NppPIALexer2.Forms
         {
             if (tvClassView.SelectedNode == null)
                 return;
-            ObjDecl tag = tvClassView.SelectedNode.Tag as ObjDecl;
-            if (tag == null)
-                return;
-            String _path = Path.Combine(ProjectManager.GetProjectByItsFile(m_CurrFile).BaseDir, tag.ClassID());
-            if (File.Exists(_path)) {
-                Jump.Add(tag.Function(), _path, tag.StartPos());
-                Jump.Cursor.Go();
-                //NPP.GoToDefinition(tag.SourceFile, tag.LineNo - 1, tag.TagName);
+            string _SourceFile;
+            int _Pos=0;
+            string _info;
+            ObjDecl _decl = tvClassView.SelectedNode.Tag as ObjDecl;
+            if (_decl != null) {
+                _SourceFile = _decl.ClassID();
+                _info = _decl.Function();
+                _Pos = _decl.StartPos();
+            } else {
+                Obj _obj = tvClassView.SelectedNode.Tag as Obj;
+                if (_obj != null) {
+                    _SourceFile = _obj.Scope();
+                    _info = _obj.Name();
+                    _Pos = 0;//TODO _obj.StartPos();
+                } else return;
             }
-            /*if (File.Exists(tag.SourceFile))
-            {
-                Jump.Add(tag.TagName, tag.SourceFile, tag.LineNo - 1);
+
+            String _path = Path.Combine(ProjectManager.GetProjectByItsFile(m_CurrFile).BaseDir, _SourceFile);
+            if (File.Exists(_path)) {
+                Jump.Add(_info, _path,_Pos);
                 Jump.Cursor.Go();
-                //NPP.GoToDefinition(tag.SourceFile, tag.LineNo - 1, tag.TagName);
-            }*/
+            }
         }
 
         void _ResetSearch()

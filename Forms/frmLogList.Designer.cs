@@ -37,8 +37,8 @@
             this.allTasksToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripButton1 = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
-            this.lviewTaskList = new System.Windows.Forms.ListView();
             this.toolStripButton2 = new System.Windows.Forms.ToolStripButton();
+            this.lviewTaskList = new System.Windows.Forms.ListView();
             this.toolStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -66,13 +66,13 @@
             this.tddiProjects.Image = ((System.Drawing.Image)(resources.GetObject("tddiProjects.Image")));
             this.tddiProjects.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.tddiProjects.Name = "tddiProjects";
-            this.tddiProjects.Size = new System.Drawing.Size(73, 22);
+            this.tddiProjects.Size = new System.Drawing.Size(79, 22);
             this.tddiProjects.Text = "All Projects";
             // 
             // allProjectsToolStripMenuItem
             // 
             this.allProjectsToolStripMenuItem.Name = "allProjectsToolStripMenuItem";
-            this.allProjectsToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.allProjectsToolStripMenuItem.Size = new System.Drawing.Size(133, 22);
             this.allProjectsToolStripMenuItem.Text = "All Projects";
             // 
             // toolStripSeparator1
@@ -88,13 +88,13 @@
             this.tddiTaskType.Image = ((System.Drawing.Image)(resources.GetObject("tddiTaskType.Image")));
             this.tddiTaskType.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.tddiTaskType.Name = "tddiTaskType";
-            this.tddiTaskType.Size = new System.Drawing.Size(61, 22);
+            this.tddiTaskType.Size = new System.Drawing.Size(65, 22);
             this.tddiTaskType.Text = "All Tasks";
             // 
             // allTasksToolStripMenuItem
             // 
             this.allTasksToolStripMenuItem.Name = "allTasksToolStripMenuItem";
-            this.allTasksToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.allTasksToolStripMenuItem.Size = new System.Drawing.Size(119, 22);
             this.allTasksToolStripMenuItem.Text = "All Tasks";
             // 
             // toolStripButton1
@@ -111,6 +111,16 @@
             this.toolStripSeparator2.Name = "toolStripSeparator2";
             this.toolStripSeparator2.Size = new System.Drawing.Size(6, 25);
             // 
+            // toolStripButton2
+            // 
+            this.toolStripButton2.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripButton2.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButton2.Image")));
+            this.toolStripButton2.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButton2.Name = "toolStripButton2";
+            this.toolStripButton2.Size = new System.Drawing.Size(23, 22);
+            this.toolStripButton2.Text = "toolStripButton2";
+            this.toolStripButton2.Click += new System.EventHandler(this.toolStripButton2_Click);
+            // 
             // lviewTaskList
             // 
             this.lviewTaskList.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -122,16 +132,7 @@
             this.lviewTaskList.TabIndex = 1;
             this.lviewTaskList.UseCompatibleStateImageBehavior = false;
             this.lviewTaskList.View = System.Windows.Forms.View.Details;
-            // 
-            // toolStripButton2
-            // 
-            this.toolStripButton2.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.toolStripButton2.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButton2.Image")));
-            this.toolStripButton2.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButton2.Name = "toolStripButton2";
-            this.toolStripButton2.Size = new System.Drawing.Size(23, 22);
-            this.toolStripButton2.Text = "toolStripButton2";
-            this.toolStripButton2.Click += new System.EventHandler(this.toolStripButton2_Click);
+            this.lviewTaskList.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.lviewTaskList_MouseDoubleClick);
             // 
             // frmLogList
             // 

@@ -193,7 +193,8 @@ namespace NppPIALexer2 {
 
                 ExecuteSimpleQuery("CREATE TABLE ObjectList (" +
                           " ID INTEGER PRIMARY KEY AUTOINCREMENT,File TEXT," +
-                          " Scope TEXT, Object TEXT, ClassID TEXT NOT NULL, State INT,Descr TEXT)");
+                          " Scope TEXT, Object TEXT, ClassID TEXT NOT NULL, State INT,Descr TEXT," + 
+                          " Start INT, Length INT)");
                 ExecuteSimpleQuery("CREATE TABLE ObjectDecl (" +
                           " ID INTEGER PRIMARY KEY AUTOINCREMENT, ClassID TEXT NOT NULL," +
                           " Function TEXT NOT NULL, Params TEXT, Returns TEXT, ClassType INT, State INT,"+
@@ -513,12 +514,13 @@ namespace NppPIALexer2 {
                 "',ClassID='" + theObj.ClassID() +
                 "',State=1" +
                 " ,Descr='" + theObj.Description() +
+                " ,Start=0, Length=0" + //TODO
                 " ' where ID=" + theObj.ID().ToString();
         } else {
-            _SQL = "INSERT INTO ObjectList (Scope , Object , ClassID, State, Descr) VALUES('" +
+            _SQL = "INSERT INTO ObjectList (Scope , Object , ClassID, State, Descr,Start, Length) VALUES('" +
                     theObj.Scope() + "', '" +
                     theObj.Name() + "', '" + theObj.ClassID() +
-                    "',1,'" + theObj.Description() + "');";
+                    "',1,'" + theObj.Description() + "',0,0);";
         }
         ExecuteSimpleQuery(_SQL);
         RefreshObjListID(theObj);	//get Ids after insert
@@ -687,12 +689,7 @@ namespace NppPIALexer2 {
     //liefert die Objekte und Variablen einer Sequenz
     public List<Obj> GetObjects(String Scope) {
         List<Obj> Result = new List<Obj>();
-//SELECT tab1.ID, tab2.ClassID,tab2.Object,Function,Params,Returns,ClassType,Start,Length  from ObjectLinks 
-//inner join ObjectList as tab1 on tab1.ID==ObjectLinks.ID_ObjectList
-//inner join ObjectList as tab2 on tab2.ID==ObjectLinks.ID_ObjectListRel                      
-// inner join ObjectDecl on ObjectDecl.ID==ObjectLinks.ID_ObjectDecl  
-// where tab1.Scope Like('Projects\ZBF\Sequences\test.seq') AND tab1.ClassID==tab1.Scope AND ClassType==2
-        String _SQL = "SELECT tab1.Scope,tab2.ClassID,tab2.Object,ClassType,Start,Length  from ObjectLinks  " +
+        String _SQL = "SELECT tab2.Scope,tab2.ClassID,tab2.Object,ClassType,ObjectDecl.Start,ObjectDecl.Length  from ObjectLinks  " +
         "inner join ObjectList as tab1 on tab1.ID==ObjectLinks.ID_ObjectList " +
         "inner join ObjectList as tab2 on tab2.ID==ObjectLinks.ID_ObjectListRel " +
         "inner join ObjectDecl on ObjectDecl.ID==ObjectLinks.ID_ObjectDecl ";
@@ -722,7 +719,7 @@ namespace NppPIALexer2 {
         String _SQL2 = " from ObjectLinks inner join ObjectList as tab1 on tab1.ID==ObjectLinks.ID_ObjectList" +
       //?       " inner join ObjectList as tab2 on tab2.ID==ObjectLinks.ID_ObjectListRel " +
              " inner join ObjectDecl on ObjectDecl.ID==ObjectLinks.ID_ObjectDecl ";
-        String _SQL = "SELECT distinct tab1.ClassID,Function,Params,Returns,ClassType,Start,Length "; //Todo da kommen doppelte Einträge bei Funktionen aus Subsequencen
+        String _SQL = "SELECT distinct ObjectDecl.ClassID,Function,Params,Returns,ClassType,tab1.Start,tab1.Length "; //Todo da kommen doppelte Einträge bei Funktionen aus Subsequencen
         _SQL += _SQL2;
         _SQL += " where tab1.Scope Like('" + Scope + "') AND tab1.ClassID==tab1.Scope AND ObjectDecl.ClassType==" +
                 ((int)ObjDecl.TClassType.tCTSeq).ToString();
