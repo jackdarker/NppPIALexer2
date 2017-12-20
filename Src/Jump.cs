@@ -48,7 +48,7 @@ namespace NppPIALexer2
             if (oldPos.Info == "")
                 oldPos.Info = string.Format("line-{0}", oldPos.LineNo + 1);
 
-            Jump newPos = new Jump(info, file, 0,pos);
+            Jump newPos = new Jump(info, file,0,pos);
             while (_JumpList.Count > _Cursor + 1 ||
                     _JumpList.Count > 0 && _JumpList[_JumpList.Count - 1].File == file && _JumpList[_JumpList.Count - 1].Pos == pos)
                 _JumpList.RemoveAt(_JumpList.Count - 1);
@@ -57,7 +57,7 @@ namespace NppPIALexer2
                 _JumpList.Add(oldPos);
             _JumpList.Add(newPos);
 
-            while (_JumpList.Count > 20)    // 最多保留20项
+            while (_JumpList.Count > 20)    // Keep up to 20 items
                 _JumpList.RemoveAt(0);
             _Cursor = _JumpList.Count - 1;
         }

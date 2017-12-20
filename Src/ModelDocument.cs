@@ -8,12 +8,14 @@ using System.Data.SQLite; //SQLiteNET wrapper
 namespace NppPIALexer2 {
 
 	public class Obj {
-	
-	public Obj(String scope,String name, String classID, String Descr) {
+
+        public Obj(String scope, String name, String classID, String Descr, int StartPos, int Length) {
 		m_ID=0;
 		m_Scope=scope;
 		m_Name=name;
 		m_ClassID=classID;
+        m_StartPos = StartPos;
+        m_Length = Length;
 		m_Descr = Descr.Substring(0, Math.Min(Descr.Length,1000)); //limit size because DB cannot handle big strings
 	}
 	
@@ -27,11 +29,23 @@ namespace NppPIALexer2 {
 	public String toString() {
 		return Name();
 	}
+    /// <summary>
+    /// the position of the declaration
+    /// </summary>
+    /// <returns></returns>
+    public int StartPos() { return m_StartPos; }
+    /// <summary>
+    /// the length of the declaration
+    /// </summary>
+    /// <returns></returns>
+    public int Length() { return m_Length; }
 	private	long m_ID;
 	private	String m_Scope;
 	private	String m_Name;
 	private	String m_ClassID;
 	private	String m_Descr;
+    private int m_StartPos;
+    private int m_Length;
 }
     public class ObjDecl {
 
@@ -228,8 +242,9 @@ namespace NppPIALexer2 {
         ExecuteSimpleQuery("Update ObjectList Set State=0;");
         ExecuteSimpleQuery("Update ObjectDecl Set State=0;");
         try {
-//??            m_TrUpdate = GetDB().BeginTransaction();        //if you want to debug database while queries are executed, you have to disable transaction !
-            //??GetDB().AutoCommit=(false); // no Auto-commit !!
+            // ! if you want to debug database while queries are executed, you have to disable transaction !
+            m_TrUpdate = GetDB().BeginTransaction();        
+            //??GetDB().AutoCommit=(false); // no Auto-commit, to slow !!
         } catch (Exception e) {
             HandleDBError(e);
         }
@@ -296,9 +311,7 @@ namespace NppPIALexer2 {
                 "SELECT ObjectLinksTemp.ID_A,ObjectLinks.ID_ObjectDecl,ObjectLinksTemp.ID_B " +
                 "from ObjectLinksTemp left join ObjectLinks on ObjectLinksTemp.ID_B==ObjectLinks.ID_ObjectList where ObjectLinksTemp.ID_A!=ObjectLinksTemp.ID_B";
             ExecuteSimpleQuery(_SQL);
- //??           m_TrUpdate.Commit();
-            //GetDB().commit();//ExecuteSimpleQuery("Commit transaction;"); //finish Rebuild-Transaction
-            //??GetDB().setAutoCommit(true);
+            m_TrUpdate.Commit();
         } catch (Exception e) {
             HandleDBError(e);
         }
@@ -312,7 +325,8 @@ namespace NppPIALexer2 {
     	_A= new ObjDecl(BASIC_TYPES[i],ObjDecl.TClassType.tCTType,"","","","",0,0);
     	UpdateObjDecl(_A);
     }
-
+    DateTime _start = DateTime.Now;
+    //Log.getInstance().Add("collecting files ", Log.EnuSeverity.Info, "");
     Tokenizer _tokenizer = new Tokenizer();
     LinkedList<Tokenizer.Token> _Tokens = new LinkedList<Tokenizer.Token>(); 
     List<String> Dirs = new List<String>() ;  //stack of directories relative to _path
@@ -327,8 +341,11 @@ namespace NppPIALexer2 {
             FileInfo[] _files = new DirectoryInfo(Dirs[k]).GetFiles();
             for (int i = 0; i < _files.Length; i++) {
                 if (_files[i].Extension.Equals(".seq", StringComparison.OrdinalIgnoreCase)) {
-                    //??_parser.AnalyseFile(_files[i].FullName);
                     _Tokens.AddLast(_tokenizer.TokenizeFile(_files[i].FullName));
+                    NPP.SetFoldLevel(1, 1, true);  //Todo !!
+                    NPP.SetFoldLevel(2, 2, false);  //Todo !!
+                    NPP.SetFoldLevel(3, 2, false);  //Todo !!
+                    NPP.SetFoldLevel(4, 1, false);  //Todo !!
                 }
             }
             DirectoryInfo[] _Dirs = new DirectoryInfo(Dirs[k]).GetDirectories();
@@ -338,6 +355,7 @@ namespace NppPIALexer2 {
             }
             k++;
         }
+        //Log.getInstance().Add("Tokenized all" , Log.EnuSeverity.Info, "");
         Parser2 _parser2 = new Parser2(this, m_ProjectDir);
         _parser2.ParseTokens(_Tokens);
         LinkedList<Parser2.Context.Log>.Enumerator _l = _parser2.GetLogs().GetEnumerator();
@@ -348,9 +366,10 @@ namespace NppPIALexer2 {
         LinkedList<Parser2.CmdBase>.Enumerator _Cmds;
         List<String>.Enumerator _Scopes = _parser2.GetScopes().GetEnumerator();
         while (_Scopes.MoveNext()) {
-            // if(!m_IsClassDef) {//each SEQ includes itself
-            {
-                this.UpdateObjList(new Obj(_Scopes.Current, "", _Scopes.Current, ""));
+            //Log.getInstance().Add("write DB " + _Scopes.Current, Log.EnuSeverity.Info, "");
+            // if(!m_IsClassDef) {
+            {   //each SEQ includes itself
+                this.UpdateObjList(new Obj(_Scopes.Current, "", _Scopes.Current, "",0,0));
             }
             _Cmds = _parser2.GetCmds(_Scopes.Current).GetEnumerator();
             while (_Cmds.MoveNext()) {
@@ -379,17 +398,17 @@ namespace NppPIALexer2 {
             m_LastCmd = Cmd2;
         } else if(Cmd.GetType().Equals(typeof(Parser2.CmdDecl))) {
             Parser2.CmdDecl Cmd2 = (Parser2.CmdDecl)Cmd;
-            Obj _obj = new Obj(Scope, Cmd2.m_Name, Cmd2.m_Type, Cmd2.Description());
+            Obj _obj = new Obj(Scope, Cmd2.m_Name, Cmd2.m_Type, Cmd2.Description(),Cmd2.StartPos(), Cmd2.Length());
             UpdateObjList(_obj);
         } else if(Cmd.GetType().Equals(typeof(Parser2.CmdInclude))) {
             Parser2.CmdInclude Cmd2 = (Parser2.CmdInclude)Cmd; 
             Obj _obj = new Obj(Scope, Cmd2.m_Path,
-                 /*m_ProjectDir +*/ getSeqDir(getSubProj()[0]/*??*/) + "\\" + Cmd2.m_Path, Cmd2.Description());	//Todo das ist falsch bei Subproject-Includes
+                /*m_ProjectDir +*/ getSeqDir(getSubProj()[0]/*??*/) + "\\" + Cmd2.m_Path, Cmd2.Description(), Cmd2.StartPos(), Cmd2.Length());	//Todo das ist falsch bei Subproject-Includes
             UpdateObjList(_obj);
         } else if(Cmd.GetType().Equals(typeof(Parser2.CmdUsing))) {
             Parser2.CmdUsing Cmd2 = (Parser2.CmdUsing)Cmd;
             Obj _obj = new Obj(Scope, Cmd2.m_Name,
-                        /*m_ProjectDir +*/ getSourceDir() + "\\" + Cmd2.m_Path, Cmd2.Description());
+                        /*m_ProjectDir +*/ getSourceDir() + "\\" + Cmd2.m_Path, Cmd2.Description(),Cmd2.StartPos(), Cmd2.Length());
             UpdateObjList(_obj);
         } else if(Cmd.GetType().Equals(typeof(Parser2.CmdFunctionDecl))) {
             Parser2.CmdFunctionDecl Cmd2 = (Parser2.CmdFunctionDecl)Cmd;
@@ -514,13 +533,15 @@ namespace NppPIALexer2 {
                 "',ClassID='" + theObj.ClassID() +
                 "',State=1" +
                 " ,Descr='" + theObj.Description() +
-                " ,Start=0, Length=0" + //TODO
+                " ,Start=" + theObj.StartPos().ToString() +
+                " ,Length=" + theObj.Length().ToString() + 
                 " ' where ID=" + theObj.ID().ToString();
         } else {
             _SQL = "INSERT INTO ObjectList (Scope , Object , ClassID, State, Descr,Start, Length) VALUES('" +
                     theObj.Scope() + "', '" +
                     theObj.Name() + "', '" + theObj.ClassID() +
-                    "',1,'" + theObj.Description() + "',0,0);";
+                    "',1,'" + theObj.Description() + "',"+
+                    theObj.StartPos().ToString() + "," + theObj.Length().ToString() + ");";
         }
         ExecuteSimpleQuery(_SQL);
         RefreshObjListID(theObj);	//get Ids after insert
@@ -689,7 +710,7 @@ namespace NppPIALexer2 {
     //liefert die Objekte und Variablen einer Sequenz
     public List<Obj> GetObjects(String Scope) {
         List<Obj> Result = new List<Obj>();
-        String _SQL = "SELECT tab2.Scope,tab2.ClassID,tab2.Object,ClassType,ObjectDecl.Start,ObjectDecl.Length  from ObjectLinks  " +
+        String _SQL = "SELECT tab2.Scope,tab2.ClassID,tab2.Object,ClassType,tab2.Start,tab2.Length from ObjectLinks  " +
         "inner join ObjectList as tab1 on tab1.ID==ObjectLinks.ID_ObjectList " +
         "inner join ObjectList as tab2 on tab2.ID==ObjectLinks.ID_ObjectListRel " +
         "inner join ObjectDecl on ObjectDecl.ID==ObjectLinks.ID_ObjectDecl ";
@@ -702,7 +723,10 @@ namespace NppPIALexer2 {
             while (reader.Read()) {
                 Result.Add(new Obj(reader.GetString(reader.GetOrdinal("Scope")),
                         reader.GetString(reader.GetOrdinal("Object")),
-                        reader.GetString(reader.GetOrdinal("ClassID")), ""));
+                        reader.GetString(reader.GetOrdinal("ClassID")),
+                        "",
+                        reader.GetInt32(reader.GetOrdinal("Start")),
+                        reader.GetInt32(reader.GetOrdinal("Length"))));
             }
             reader.Dispose();
             command.Dispose();
@@ -719,7 +743,7 @@ namespace NppPIALexer2 {
         String _SQL2 = " from ObjectLinks inner join ObjectList as tab1 on tab1.ID==ObjectLinks.ID_ObjectList" +
       //?       " inner join ObjectList as tab2 on tab2.ID==ObjectLinks.ID_ObjectListRel " +
              " inner join ObjectDecl on ObjectDecl.ID==ObjectLinks.ID_ObjectDecl ";
-        String _SQL = "SELECT distinct ObjectDecl.ClassID,Function,Params,Returns,ClassType,tab1.Start,tab1.Length "; //Todo da kommen doppelte Einträge bei Funktionen aus Subsequencen
+        String _SQL = "SELECT distinct ObjectDecl.ClassID,Function,Params,Returns,ClassType,ObjectDecl.Start,ObjectDecl.Length "; 
         _SQL += _SQL2;
         _SQL += " where tab1.Scope Like('" + Scope + "') AND tab1.ClassID==tab1.Scope AND ObjectDecl.ClassType==" +
                 ((int)ObjDecl.TClassType.tCTSeq).ToString();

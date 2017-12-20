@@ -137,6 +137,7 @@ namespace NppPIALexer2.Forms
         private String m_CurrFile = "";
         void _UpdateView(String File) {
             m_CurrFile = File;
+            if (tvClassView.Nodes.Count == 0) return;
             TreeNode root = tvClassView.Nodes[0]; //TODO
             _InsertTags(root, TagCache.GetTags(File));
         }
@@ -465,7 +466,7 @@ namespace NppPIALexer2.Forms
                 if (_obj != null) {
                     _SourceFile = _obj.Scope();
                     _info = _obj.Name();
-                    _Pos = 0;//TODO _obj.StartPos();
+                    _Pos = _obj.StartPos();
                 } else return;
             }
 

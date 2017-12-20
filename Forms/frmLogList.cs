@@ -40,7 +40,7 @@ namespace NppPIALexer2.Forms
             ListViewItem _item;
             List<Log.LogData>.Enumerator x = Log.getInstance().GetMessages().GetEnumerator();
             while(x.MoveNext()) {
-                String[] y = {x.Current.Time.ToShortTimeString(),
+                String[] y = {x.Current.Time.ToLongTimeString(),
                    x.Current.Severity.ToString(),x.Current.Source, x.Current.Message };
                 _item= new ListViewItem(y);
                 _item.Tag = x.Current.Source;
@@ -69,7 +69,8 @@ namespace NppPIALexer2.Forms
             }
         }
     }
-    public class Log {
+
+    public class Log {  //Todo put in own class file
         private Log() {
             m_Data = new List<LogData>();
         }

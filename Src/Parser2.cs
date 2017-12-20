@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
+using System.Linq;
 using System.Text.RegularExpressions;
+using NppPIALexer2.Forms;
 
 namespace NppPIALexer2 {
     /// <summary>
@@ -547,13 +548,17 @@ namespace NppPIALexer2 {
                 }
             }
         public void ParseTokens(LinkedList<Tokenizer.Token> tokens) {
-            
+            DateTime _start = DateTime.Now;
+            Log.getInstance().Add("Parsing started", Log.EnuSeverity.Info, "");
             LinkedList<Tokenizer.Token>.Enumerator y= tokens.GetEnumerator();
             while(y.MoveNext()) {
                 this.ResetState(y.Current.GetValue(false));
                 y.Current.InspectNodes(this);
             }
             Verify();
+            DateTime _end = DateTime.Now;
+            TimeSpan dt = _end - _start;
+            Log.getInstance().Add("Parsing done in "+ dt.TotalMilliseconds.ToString() +" ms", Log.EnuSeverity.Info, "");
         }
         void Verify() {
             //Todo

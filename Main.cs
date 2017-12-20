@@ -461,11 +461,11 @@ namespace NppPIALexer2
             Jump cur = Jump.Cursor;
             if (cur != null)
             {
-                string file = NPP.GetCurrentFile();  // 进入函数之后，光标发生改变，先回到函数处
-                int line = NPP.GetCurrentLine();
-                if (file != cur.File || line != cur.LineNo)
+                string file = NPP.GetCurrentFile();  // After entering the function, the cursor changes and goes back to the function
+                int line = NPP.GetCurrentPosition(); //?? .GetCurrentLine();    
+                if (file != cur.File || line != cur.Pos) //??.LineNo)   Todo LineNo is not properly set when jumping
                     cur.Go();
-                else  // 进入函数之后，光标没有离开当前行，退回到前一个位置
+                else  // After entering the function, the cursor does not leave the current line and returns to the previous position
                 {
                     Jump back = Jump.Back;
                     if (back != null)
