@@ -203,9 +203,11 @@
     <Content Include="Images\ClassView\c_enumitem.png" />
     <Content Include="Images\ClassView\c_event.png" />
     <Content Include="Images\ClassView\c_field.png" />
+    <None Include="Images\ClassView\c_field_ex.png" />
     <Content Include="Images\ClassView\c_interface.png" />
     <Content Include="Images\ClassView\c_macro.png" />
     <Content Include="Images\ClassView\c_method.png" />
+    <None Include="Images\ClassView\c_method_ex.png" />
     <Content Include="Images\ClassView\c_namespace.png" />
     <Content Include="Images\ClassView\c_property.png" />
     <Content Include="Images\ClassView\c_struct.png" />

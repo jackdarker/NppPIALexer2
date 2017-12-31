@@ -173,6 +173,16 @@ namespace NppPIALexer2.Properties {
         /// <summary>
         ///   Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap c_field_ex {
+            get {
+                object obj = ResourceManager.GetObject("c_field_ex", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap c_interface {
             get {
                 object obj = ResourceManager.GetObject("c_interface", resourceCulture);
@@ -196,6 +206,16 @@ namespace NppPIALexer2.Properties {
         internal static System.Drawing.Bitmap c_method {
             get {
                 object obj = ResourceManager.GetObject("c_method", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Sucht eine lokalisierte Ressource vom Typ System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap c_method_ex {
+            get {
+                object obj = ResourceManager.GetObject("c_method_ex", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

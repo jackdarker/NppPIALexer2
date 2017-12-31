@@ -223,7 +223,8 @@ namespace NppPIALexer2.Forms
                 TreeNode node = new TreeNode();
                 node.Text = _Objs.Current.ClassID() + " " + _Objs.Current.Name();
                 node.Tag = _Objs.Current;
-                node.ImageIndex = node.SelectedImageIndex = Resource.ClassViewIcon_Cpp_Variable;
+                node.ImageIndex = node.SelectedImageIndex = 
+                    (_Scope==_Objs.Current.Scope())?Resource.ClassViewIcon_Cpp_Variable:Resource.ClassViewIcon_ASM_Type;
                 node.ToolTipText = _Objs.Current.Description();
                 parent.Nodes.Add(node);
                 //Recursiv für jedes Object prüfen ob Subdeclaration vorhanden (Sequenz & lvclass)
@@ -235,7 +236,8 @@ namespace NppPIALexer2.Forms
                 TreeNode node = new TreeNode();
                 node.Text = _ObjsDecl.Current.Function();
                 node.Tag = _ObjsDecl.Current;
-                node.ImageIndex = node.SelectedImageIndex = Resource.ClassViewIcon_Cpp_Function;
+                node.ImageIndex = node.SelectedImageIndex =
+                    (_Scope == _ObjsDecl.Current.ClassID()) ? Resource.ClassViewIcon_Cpp_Function : Resource.ClassViewIcon_ASM_Macro; 
                 node.ToolTipText = _ObjsDecl.Current.Description();
                 parent.Nodes.Add(node);
             }

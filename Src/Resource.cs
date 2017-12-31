@@ -91,18 +91,18 @@ namespace NppPIALexer2
 
         public const int ClassViewIcon_Cpp_Class = 5;
         public const int ClassViewIcon_Cpp_Macro = 11;
-        public const int ClassViewIcon_Cpp_EnumerationName = 7; // 枚举值
+        public const int ClassViewIcon_Cpp_EnumerationName = 7; // 
         public const int ClassViewIcon_Cpp_Function = 12;
-        public const int ClassViewIcon_Cpp_Enum = 6;            // 枚举名
-        public const int ClassViewIcon_Cpp_LocalVar = 9;        // 不显示
+        public const int ClassViewIcon_Cpp_Enum = 6;            // 
+        public const int ClassViewIcon_Cpp_LocalVar = 9;        // 
         public const int ClassViewIcon_Cpp_ClassMember = 9;
         public const int ClassViewIcon_Cpp_Namespace = 13;
-        public const int ClassViewIcon_Cpp_FunctionPrototype = 14;  // 不显示
+        public const int ClassViewIcon_Cpp_FunctionPrototype = 14;  // 
         public const int ClassViewIcon_Cpp_Struct = 15;
         public const int ClassViewIcon_Cpp_Typedef = 16;
         public const int ClassViewIcon_Cpp_Union = 17;
         public const int ClassViewIcon_Cpp_Variable = 9;
-        public const int ClassViewIcon_Cpp_Declaration = 11;    // 不显示
+        public const int ClassViewIcon_Cpp_Declaration = 11;    // 
 
         public const int ClassViewIcon_CSharp_Class = 5;
         public const int ClassViewIcon_CSharp_Macro = 11;
@@ -123,7 +123,7 @@ namespace NppPIALexer2
         public const int ClassViewIcon_Java_Field = 9;
         public const int ClassViewIcon_Java_Enum = 6;
         public const int ClassViewIcon_Java_Interface = 10;
-        public const int ClassViewIcon_Java_LocalVar = 9;   // 不显示
+        public const int ClassViewIcon_Java_LocalVar = 9;   // 
         public const int ClassViewIcon_Java_Method = 12;
         public const int ClassViewIcon_Java_Package = 13;
 
@@ -132,7 +132,7 @@ namespace NppPIALexer2
         public const int ClassViewIcon_Python_Method = 20;
         public const int ClassViewIcon_Python_Variable = 21;
         public const int ClassViewIcon_Python_Import = 22;
-        public const int ClassViewIcon_Python_Field = 9;    // 不显示，只智能提示
+        public const int ClassViewIcon_Python_Field = 9;    // 
 
         public const int ClassViewIcon_JavaScript_Function = 12;
         public const int ClassViewIcon_JavaScript_Class = 5;

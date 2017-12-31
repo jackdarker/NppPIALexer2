@@ -343,9 +343,9 @@ namespace NppPIALexer2 {
                 if (_files[i].Extension.Equals(".seq", StringComparison.OrdinalIgnoreCase)) {
                     _Tokens.AddLast(_tokenizer.TokenizeFile(_files[i].FullName));
                     NPP.SetFoldLevel(1, 1, true);  //Todo !!
-                    NPP.SetFoldLevel(2, 2, false);  //Todo !!
-                    NPP.SetFoldLevel(3, 2, false);  //Todo !!
-                    NPP.SetFoldLevel(4, 1, false);  //Todo !!
+                    NPP.SetFoldLevel(2, 2, false);  
+                    NPP.SetFoldLevel(3, 2, false);  
+                    NPP.SetFoldLevel(4, 1, false);  
                 }
             }
             DirectoryInfo[] _Dirs = new DirectoryInfo(Dirs[k]).GetDirectories();
