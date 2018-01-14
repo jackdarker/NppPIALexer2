@@ -122,7 +122,23 @@ namespace NppPIALexer2.Forms
             public int RootIndex { get; set; }
             public string TagFullName { get; set; }
         }
+        // Create a node sorter for sorting treeview
+        public class ClassNodeSorter : System.Collections.IComparer {
+            public int Compare(object x, object y) {
+                TreeNode tx = x as TreeNode;
+                TreeNode ty = y as TreeNode;
+                ObjDecl _decl1 = tx.Tag as ObjDecl;
+                if (_decl1 != null) {
+    
+                } else {
+                    Obj _obj1 = tx.Tag as Obj;
+                    if (_obj1 != null) {
 
+                    }
+                } 
+                    return string.Compare(tx.Text, ty.Text);
+            }
+        }
         delegate void UpdateClassViewDelegate(CacheUpdatedArgs e);
         UpdateClassViewDelegate _updateClassView;
         delegate void UpdateViewDelegate(String File);
@@ -148,6 +164,7 @@ namespace NppPIALexer2.Forms
             InitializeComponent();
             
             tvClassView.ImageList = Resource.ClassViewImgList;
+            tvClassView.TreeViewNodeSorter = new ClassNodeSorter();
             _updateClassView = new UpdateClassViewDelegate(_TagCache_CacheUpdated);
             TagCache.CacheUpdated += new CacheUpdated(TagCache_CacheUpdated);
             _DGupdateView = new UpdateViewDelegate(_UpdateView);
@@ -229,7 +246,8 @@ namespace NppPIALexer2.Forms
                 parent.Nodes.Add(node);
                 //Recursiv für jedes Object prüfen ob Subdeclaration vorhanden (Sequenz & lvclass)
                 //Todo falls versehentlich recursion in den seq ist hängen wir hier fest
-                _InsertTagsSub(node, (_Objs.Current.ClassID()), _Model);
+               /* if (_Scope != _Objs.Current.ClassID())
+                    _InsertTagsSub(node, (_Objs.Current.ClassID()), _Model);*/
             }
             List<ObjDecl>.Enumerator _ObjsDecl = _Model.GetFunctions(_Scope).GetEnumerator();
             while(_ObjsDecl.MoveNext()) {
@@ -625,6 +643,45 @@ namespace NppPIALexer2.Forms
 
         private void frmTagList_Load(object sender, EventArgs e) {
 
+        }
+
+
+        private void tvClassView_AfterSelect(object sender, TreeViewEventArgs e) {
+            if (tvClassView.SelectedNode == null)
+                return;
+            
+            string _SourceFile;
+            string _text = "";
+            int _Pos = 0;
+            ObjDecl _decl = e.Node.Tag as ObjDecl;
+            if (_decl != null) {
+                switch (_decl.ClassType()) {
+                    case ObjDecl.TClassType.tCTSeq:
+                        _text = _decl.ClassID() + " " + _decl.Function() + "\r\n" + _decl.Description();
+                        break;
+                    case ObjDecl.TClassType.tCTClass:
+                        _text = _decl.ClassID() + " " + _decl.Function() + "\r\n" + _decl.Description();
+                        break;
+                    case ObjDecl.TClassType.tCTFunc:
+                        _text = _decl.ClassID() + " " + _decl.Function() + "\r\n";
+                        _text += "(" + _decl.Params() + ")" + "->" + _decl.Returns() + "\r\n";
+                        _text += "\r\n" + _decl.Description();
+                        break;
+                    default:
+                        break;
+                }
+                _SourceFile = _decl.ClassID();
+                _Pos = _decl.StartPos();
+            } else {
+                Obj _obj = tvClassView.SelectedNode.Tag as Obj;
+                if (_obj != null) {
+                    _text = _obj.ClassID() + " " + _obj.Name() + "\r\n" + _obj.Scope();
+                    _text += "\r\n" + _obj.Description();
+                    _SourceFile = _obj.Scope();
+                    _Pos = _obj.StartPos();
+                } else return;
+            }
+            textBox1.Text = _text;
         }
 
     }

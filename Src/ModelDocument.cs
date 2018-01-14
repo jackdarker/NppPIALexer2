@@ -410,6 +410,8 @@ namespace NppPIALexer2 {
             Obj _obj = new Obj(Scope, Cmd2.m_Name,
                         /*m_ProjectDir +*/ getSourceDir() + "\\" + Cmd2.m_Path, Cmd2.Description(),Cmd2.StartPos(), Cmd2.Length());
             UpdateObjList(_obj);
+            //Todo need to get the functions for this lvclass to put them into ObjDecl
+            UpdateObjDecl(new ObjDecl(_obj.ClassID(),ObjDecl.TClassType.tCTClass,"Init","","","",0,0));
         } else if(Cmd.GetType().Equals(typeof(Parser2.CmdFunctionDecl))) {
             Parser2.CmdFunctionDecl Cmd2 = (Parser2.CmdFunctionDecl)Cmd;
             ObjDecl _objDecl = new ObjDecl(Scope,
@@ -714,7 +716,9 @@ namespace NppPIALexer2 {
         "inner join ObjectList as tab1 on tab1.ID==ObjectLinks.ID_ObjectList " +
         "inner join ObjectList as tab2 on tab2.ID==ObjectLinks.ID_ObjectListRel " +
         "inner join ObjectDecl on ObjectDecl.ID==ObjectLinks.ID_ObjectDecl ";
-        _SQL += " where tab1.Scope Like('" + Scope + "') AND tab1.ClassID==tab1.Scope AND ClassType=="+((int)ObjDecl.TClassType.tCTType).ToString();
+        _SQL += " where (tab1.Scope Like('" + Scope + "') AND tab1.ClassID==tab1.Scope AND (ClassType=="+
+            ((int)ObjDecl.TClassType.tCTType).ToString() + " OR ClassType=="+((int)ObjDecl.TClassType.tCTClass).ToString() + "))" +
+            " OR (tab2.ClassID Like('" + Scope + "') AND tab1.ClassID==tab2.ClassID AND ClassType==" + ((int)ObjDecl.TClassType.tCTClass).ToString() + ")";
         //Todo we dont see what is defined in other sequences
         //alt SELECT Scope,Object, ClassID FROM ObjectList  where Scope Like('Projects\ZBF\Sequences\test.seq') AND Object!=''
         try {

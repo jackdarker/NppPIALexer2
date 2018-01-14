@@ -173,6 +173,10 @@ namespace NppPIALexer2
             }
         }
 
-
+     /*   [DllExport(CallingConvention = CallingConvention.StdCall)]
+        static int GetLexerCount() {
+            return 0;
+        }*/
+        
     } // end class
 }

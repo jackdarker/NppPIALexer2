@@ -48,12 +48,18 @@ namespace NppPIALexer2 {
             abstract public Boolean TryParse(Parser2.Context Context, Tokenizer.Token Token);
             abstract public String AsText();
             abstract public CmdBase Copy();
+            
             public CmdBase() { }
             public CmdBase(CmdBase CopyThis) {
                 m_StartPos = CopyThis.m_StartPos;
                 m_Length = CopyThis.m_Length;
                 m_Descr = CopyThis.m_Descr;
                 m_Error = CopyThis.m_Error;
+            }
+            //this should be called at start of TryParse to clear result of previous call
+            protected virtual void ClearState() {
+                m_StartPos = m_Length=0;
+                m_Descr = m_Error= "";
             }
             public bool HasError() {
                 return !m_Error.Equals("");
@@ -71,6 +77,9 @@ namespace NppPIALexer2 {
             public override CmdBase Copy() {
                 return new CmdInvalid(this);
             }
+            protected override void ClearState() {
+                base.ClearState();
+            }
             /// <summary>
             /// returns true if the token was successfully converted to Cmd
             /// even if there are errors in the cmd
@@ -79,6 +88,7 @@ namespace NppPIALexer2 {
             /// <param name="Token"></param>
             /// <returns></returns>
             override public Boolean TryParse(Context Context, Tokenizer.Token Token) {
+                ClearState();
                 this.m_Error = "unknown Cmd " + Token.GetValue(true);
                 return true;
             }
@@ -101,8 +111,12 @@ namespace NppPIALexer2 {
             public override CmdBase Copy() {
                 return new CmdInclude(this);
             }
+            protected override void ClearState() {
+                base.ClearState();
+                m_Path = "";
+            }
             override public Boolean TryParse(Context Context, Tokenizer.Token Token) {
-                m_Error = "";
+                ClearState();
                 Boolean _Ret = true;
                 if (Token.GetTopNodeType().Equals(typeof(Tokenizer.RuleInclude))) {
                     this.m_StartPos = Token.GetPosStart();
@@ -144,8 +158,12 @@ namespace NppPIALexer2 {
             public override CmdBase Copy() {
                 return new CmdComment(this);
             }
+            protected override void ClearState() {
+                base.ClearState();
+                m_Comment = "";
+            }
             override public Boolean TryParse(Context Context, Tokenizer.Token Token) {
-                m_Error = "";
+                ClearState();
                 Boolean _Ret = true;
                 if (Token.GetTopNodeType().Equals(typeof(Tokenizer.RuleComment))) {
                     this.m_StartPos = Token.GetPosStart();
@@ -167,9 +185,11 @@ namespace NppPIALexer2 {
             public String m_Path = "";
             public String m_Name = "";
             Regex m_RegEx;
+            Regex m_RegEx2;
             public CmdUsing()
                 : base() {
-                    m_RegEx = new Regex("(\"[^\r]*:)([^\r]*)(.[^\r]*\")", RegexOptions.Singleline);
+                    m_RegEx = new Regex("([\\w]+)(\\.lvlibp:)([\\w]+)(\\.lvclass)", RegexOptions.Singleline);
+                    m_RegEx2 = new Regex("([\\w]+)(\\.lvlibp)", RegexOptions.Singleline);
             }
             public CmdUsing(CmdUsing CopyThis)
                 : base(CopyThis) {
@@ -179,8 +199,12 @@ namespace NppPIALexer2 {
             public override CmdBase Copy() {
                 return new CmdUsing(this);
             }
+            protected override void ClearState() {
+                base.ClearState();
+                m_Path = m_Name= "";
+            }
             override public Boolean TryParse(Context Context, Tokenizer.Token Token) {
-                m_Error = "";
+                ClearState();
                 Boolean _Ret = true;
                 if (Token.GetTopNodeType().Equals(typeof(Tokenizer.RuleUsing))) {
                     LinkedList<Tokenizer.Token>.Enumerator m_Subs = Token.GetEnumerator();
@@ -190,15 +214,28 @@ namespace NppPIALexer2 {
                         if (m_Subs.Current.GetNodeType().Equals(typeof(Tokenizer.RuleString))) {
                             this.m_Path = m_Subs.Current.GetValue(false);
                             m_Path = m_Path.Replace("\"", "");
-                            //"UserManager.lvlibp:UserManager.lvclass"   -> Name=UserManager
+                            //"UserMgr.lvlibp:UserManager.lvclass"   -> Name=UserManager
+                            //"UserMgr.lvlibp"   -> Name=UserMgr
                             Match m = m_RegEx.Match(this.m_Path, 0);
-                            if(m.Success && m.Groups.Count == 4) {
-                                this.m_Name = m.Groups[2].Value;
+                            if(m.Success && m.Groups.Count == 5) {
+                                this.m_Name = m.Groups[3].Value;
                             } else {
-                                this.m_Error += " invalid Path";
+                                m = m_RegEx2.Match(this.m_Path, 0);
+                                if (m.Success && m.Groups.Count == 3) {
+                                    this.m_Name = m.Groups[1].Value;
+                                } else {
+                                    this.m_Error += " invalid Path";
+                                }
                             }
                         }
-                        if (m_Subs.Current.GetNodeType().Equals(typeof(Tokenizer.RuleRegex))) {  //optional Name is hidden behind "as"
+                        if (m_Subs.Current.GetNodeType().Equals(typeof(Tokenizer.RuleUsing))) {
+                            Tokenizer.Token AS = m_Subs.Current.First.Value;
+                            if (AS.GetNodeType().Equals(typeof(Tokenizer.RuleName))) {
+                                this.m_Name = AS.GetValue(false);
+                            }
+                            
+                        }
+                        if (m_Subs.Current.GetNodeType().Equals(typeof(Tokenizer.RuleName))) {  //optional Name is hidden behind "as"
                             this.m_Name = m_Subs.Current.First.Value.GetValue(false);
                         }
                         this.m_Length = m_Subs.Current.GetPosEnd() - Token.GetPosStart();
@@ -233,8 +270,12 @@ namespace NppPIALexer2 {
             public override CmdBase Copy() {
                 return new CmdDecl(this);
             }
+            protected override void ClearState() {
+                base.ClearState();
+                m_Type= m_Name = "";
+            }
             override public Boolean TryParse(Context Context, Tokenizer.Token Token) {
-                m_Error = "";
+                ClearState();
                 Boolean _Ret = true;
                 if (Token.GetTopNodeType().Equals(typeof(Tokenizer.RuleParamDecl)) ||
                     Token.GetTopNodeType().Equals(typeof(Tokenizer.RuleDecl))||
@@ -292,8 +333,15 @@ namespace NppPIALexer2 {
                 m_Returns = new LinkedList<CmdDecl>(CopyThis.m_Returns);
                 m_Vars = new LinkedList<CmdDecl>(CopyThis.m_Vars);
             }
+            protected override void ClearState() {
+                base.ClearState();
+                m_Name = "";
+                m_Params = new LinkedList<CmdDecl>();
+                m_Returns = new LinkedList<CmdDecl>();
+                m_Vars = new LinkedList<CmdDecl>();
+            }
             override public Boolean TryParse(Context Context, Tokenizer.Token Token) {
-                m_Error = "";
+                ClearState();
                 Boolean _Ret = true;
                 if (Context.m_ActualCmd.Equals(typeof(Tokenizer.RuleFunctionDecl))) {
                     LinkedList<Tokenizer.Token>.Enumerator m_Subs = Token.GetEnumerator();

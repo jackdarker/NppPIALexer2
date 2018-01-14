@@ -200,6 +200,8 @@ namespace NppPIALexer2
             }
 
             Win32.SendMessage(PluginBase.GetCurrentScintilla(), SciMsg.SCI_AUTOCSHOW, count, sb.ToString());
+          //?? can only display AC or CT  Win32.SendMessage(PluginBase.GetCurrentScintilla(), SciMsg.SCI_CALLTIPSHOW, 1, sb.ToString());
+
         }
 
         /// <summary>

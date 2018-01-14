@@ -353,6 +353,21 @@ namespace NppPIALexer2 {
                 : base(Parent, s_ManyWhitespace + "\\bbreak\\b" + s_ManyWhitespace, null) {
             }
         }
+        /// <summary>
+        /// 
+        /// </summary>
+        public class RuleWait : RuleSequence {
+            public RuleWait(Rule Parent)
+                : base(Parent) {
+                this.m_Parent = this;
+                this.AddNode(new RuleRegex(m_Parent,
+                     s_ManyWhitespace + "\\bwait\\b" + s_ManyWhitespace, this));
+                this.AddNode(new RuleLPar(m_Parent));
+                this.AddNode(new RuleParams(m_Parent));
+                this.AddNode(new RuleRPar(m_Parent));
+                this.AddNode(new RuleEOL(Parent));
+            }
+        }
         public class RuleReturn : RuleAlternative {    //  return or return(55,false)
             public RuleReturn(Rule Parent): base(Parent){
                 RuleSequence x = new RuleSequence(m_Parent);
@@ -717,6 +732,7 @@ namespace NppPIALexer2 {
                         addRule(x, new RuleSwitch(m_Parent));
                         addRule(x, new RuleBreak(m_Parent));
                         addRule(x, new RuleReturn(m_Parent));
+                        addRule(x, new RuleWait(m_Parent));
                         addRule(x, new RuleException(m_Parent));
                         addRule(x, new RuleCommanderCall(m_Parent));
                         addRule(x, new RuleFunctionCall(m_Parent));

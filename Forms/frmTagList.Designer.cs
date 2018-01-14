@@ -115,6 +115,7 @@
             this.tvClassView.ShowNodeToolTips = true;
             this.tvClassView.Size = new System.Drawing.Size(276, 300);
             this.tvClassView.TabIndex = 1;
+            this.tvClassView.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.tvClassView_AfterSelect);
             this.tvClassView.DoubleClick += new System.EventHandler(this.tvClassView_DoubleClick);
             this.tvClassView.KeyDown += new System.Windows.Forms.KeyEventHandler(this.tvClassView_KeyDown);
             // 
